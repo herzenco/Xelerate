@@ -1,0 +1,27 @@
+# Xelerate
+
+> Fractional product management and custom development solutions for startups and scale-ups.
+
+## About
+Xelerate provides senior product leadership without the full-time salary. We offer fractional product management for $2,000/month and custom product & development solutions.
+
+## Services
+- [Product Leadership](https://xelerate.me/product-leadership): Fractional PM for $2,000/month — roadmaps, sprint rituals, stakeholder management, accountability
+- [Custom Solutions](https://xelerate.me/custom-solutions): Bespoke product strategy, web development, MVP builds, and team augmentation
+
+## Pages
+- [Home](https://xelerate.me)
+- [Pricing](https://xelerate.me/pricing)
+- [How It Works](https://xelerate.me/how-it-works)
+- [FAQ](https://xelerate.me/faq)
+- [About](https://xelerate.me/about)
+- [Blog](https://xelerate.me/blog)
+
+## Blog Posts
+- [What Is a Fractional Product Manager?](https://xelerate.me/blog/what-is-fractional-product-manager)
+- [How Much Does a Fractional PM Cost?](https://xelerate.me/blog/fractional-product-manager-cost)
+- [Fractional vs Full-Time PM](https://xelerate.me/blog/fractional-vs-full-time-product-manager)
+
+## Contact
+Email: hello@fractionalpm.com
+Website: https://xelerate.me
