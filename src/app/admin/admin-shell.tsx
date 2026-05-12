@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { BarChart3, FileText, History, LayoutDashboard, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -89,13 +88,8 @@ export function AdminShell({ children, email = "Lupe" }: AdminShellProps) {
               <span className="hidden text-sm text-muted-foreground sm:inline">
                 {email}
               </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => signOut({ callbackUrl: "/admin/sign-in" })}
-              >
-                Sign out
+              <Button asChild variant="outline" size="sm">
+                <a href="/admin/sign-out">Sign out</a>
               </Button>
             </div>
           </div>
