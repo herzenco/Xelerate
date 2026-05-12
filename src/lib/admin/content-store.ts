@@ -3,6 +3,14 @@ import "server-only";
 import { randomUUID } from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
+import { and, asc, desc, eq, lte } from "drizzle-orm";
+import { getDb } from "@/db";
+import {
+  adminAuditLog,
+  blogPosts,
+  blogTopics,
+  generationErrors,
+} from "@/db/schema";
 
 export type BlogPostStatus =
   | "draft"
@@ -72,8 +80,21 @@ const seedTopics = [
   "How to turn a messy backlog into a focused 30-day roadmap",
 ];
 
+function hasDatabase() {
+  return Boolean(process.env.DATABASE_URL);
+}
+
 function now() {
   return new Date().toISOString();
+}
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function toIso(value: Date | string | null | undefined) {
+  if (!value) return null;
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 }
 
 function slugify(value: string) {
@@ -83,6 +104,59 @@ function slugify(value: string) {
     .replace(/['"]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function detectXyrenLink(markdown: string) {
+  return /https?:\/\/(www\.)?xyren\.me|xyren\.me/i.test(markdown);
+}
+
+function actorEmail() {
+  return process.env.ADMIN_EMAIL_ALLOWLIST?.split(",")[0]?.trim() || "lupe@xelerate.me";
+}
+
+function rowToPost(row: typeof blogPosts.$inferSelect): AdminBlogPost {
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    tags: row.tags,
+    metaDescription: row.metaDescription,
+    bodyMarkdown: row.bodyMarkdown,
+    editorsNote: row.editorsNote ?? "",
+    status: row.status,
+    publishAt: toIso(row.publishAt),
+    publishedAt: toIso(row.publishedAt),
+    similarityWarning: row.similarityWarning,
+    suggestedInternalLinks: row.suggestedInternalLinks,
+    hasXyrenLink: row.hasXyrenLink,
+    generationDate: row.generationDate,
+    createdAt: toIso(row.createdAt) ?? now(),
+    updatedAt: toIso(row.updatedAt) ?? now(),
+  };
+}
+
+function rowToTopic(row: typeof blogTopics.$inferSelect): BlogTopic {
+  return {
+    id: row.id,
+    topic: row.topic,
+    lastUsedAt: toIso(row.lastUsedAt),
+    active: row.active,
+    createdAt: toIso(row.createdAt) ?? now(),
+    updatedAt: toIso(row.updatedAt) ?? now(),
+  };
+}
+
+function rowToAudit(row: typeof adminAuditLog.$inferSelect): AdminAuditEvent {
+  return {
+    id: row.id,
+    actorEmail: row.actorEmail,
+    action: row.action,
+    resourceType: row.resourceType,
+    resourceId: row.resourceId,
+    ip: row.ip,
+    ua: row.ua,
+    createdAt: toIso(row.createdAt) ?? now(),
+  };
 }
 
 function defaultStore(): ContentStore {
@@ -138,7 +212,7 @@ async function writeStore(store: ContentStore) {
   await writeFile(storePath, JSON.stringify(store, null, 2));
 }
 
-async function audit(
+async function auditLocal(
   store: ContentStore,
   action: string,
   resourceType: string,
@@ -146,7 +220,7 @@ async function audit(
 ) {
   store.auditLog.unshift({
     id: randomUUID(),
-    actorEmail: process.env.ADMIN_EMAIL_ALLOWLIST?.split(",")[0] ?? "lupe@xelerate.me",
+    actorEmail: actorEmail(),
     action,
     resourceType,
     resourceId,
@@ -158,17 +232,67 @@ async function audit(
   store.auditLog = store.auditLog.slice(0, 250);
 }
 
+async function auditDb(
+  action: string,
+  resourceType: string,
+  resourceId: string | null,
+) {
+  await getDb().insert(adminAuditLog).values({
+    actorEmail: actorEmail(),
+    action,
+    resourceType,
+    resourceId,
+    ip: null,
+    ua: null,
+  });
+}
+
+async function ensureSeedTopics() {
+  if (!hasDatabase()) return;
+
+  const existing = await getDb().select({ id: blogTopics.id }).from(blogTopics).limit(1);
+  if (existing.length > 0) return;
+
+  await getDb().insert(blogTopics).values(seedTopics.map((topic) => ({ topic })));
+}
+
 export async function listAdminPosts() {
+  if (hasDatabase()) {
+    const rows = await getDb()
+      .select()
+      .from(blogPosts)
+      .orderBy(desc(blogPosts.updatedAt));
+    return rows.map(rowToPost);
+  }
+
   const store = await readStore();
   return [...store.posts].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
 export async function getAdminPost(id: string) {
+  if (hasDatabase()) {
+    const [row] = await getDb()
+      .select()
+      .from(blogPosts)
+      .where(eq(blogPosts.id, id))
+      .limit(1);
+    return row ? rowToPost(row) : null;
+  }
+
   const store = await readStore();
   return store.posts.find((post) => post.id === id) ?? null;
 }
 
 export async function listBlogTopics() {
+  if (hasDatabase()) {
+    await ensureSeedTopics();
+    const rows = await getDb()
+      .select()
+      .from(blogTopics)
+      .orderBy(desc(blogTopics.active), asc(blogTopics.topic));
+    return rows.map(rowToTopic);
+  }
+
   const store = await readStore();
   return [...store.topics].sort((a, b) => {
     if (a.active !== b.active) return a.active ? -1 : 1;
@@ -177,11 +301,31 @@ export async function listBlogTopics() {
 }
 
 export async function listAuditEvents() {
+  if (hasDatabase()) {
+    const rows = await getDb()
+      .select()
+      .from(adminAuditLog)
+      .orderBy(desc(adminAuditLog.createdAt))
+      .limit(100);
+    return rows.map(rowToAudit);
+  }
+
   const store = await readStore();
   return store.auditLog.slice(0, 100);
 }
 
 export async function getNextActiveTopic() {
+  if (hasDatabase()) {
+    await ensureSeedTopics();
+    const [row] = await getDb()
+      .select()
+      .from(blogTopics)
+      .where(eq(blogTopics.active, true))
+      .orderBy(asc(blogTopics.lastUsedAt), asc(blogTopics.createdAt))
+      .limit(1);
+    return row ? rowToTopic(row) : null;
+  }
+
   const store = await readStore();
   const activeTopics = store.topics.filter((topic) => topic.active);
 
@@ -193,12 +337,21 @@ export async function getNextActiveTopic() {
 }
 
 export async function getRecentPublishedPostContext() {
-  const store = await readStore();
+  const posts = hasDatabase()
+    ? (
+        await getDb()
+          .select()
+          .from(blogPosts)
+          .where(eq(blogPosts.status, "published"))
+          .orderBy(desc(blogPosts.publishedAt))
+          .limit(10)
+      ).map(rowToPost)
+    : (await readStore()).posts
+        .filter((post) => post.status === "published")
+        .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
+        .slice(0, 10);
 
-  return store.posts
-    .filter((post) => post.status === "published")
-    .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
-    .slice(0, 10)
+  return posts
     .map((post) => {
       const firstParagraph =
         post.bodyMarkdown
@@ -212,9 +365,32 @@ export async function getRecentPublishedPostContext() {
     .join("\n\n---\n\n");
 }
 
+export async function getGeneratedPostIdForToday() {
+  if (hasDatabase()) {
+    const [row] = await getDb()
+      .select({ id: blogPosts.id })
+      .from(blogPosts)
+      .where(eq(blogPosts.generationDate, today()))
+      .limit(1);
+    return row?.id ?? null;
+  }
+
+  const store = await readStore();
+  return store.posts.find((post) => post.generationDate === today())?.id ?? null;
+}
+
 export async function createBlogTopic(topic: string) {
   const cleaned = topic.trim();
   if (!cleaned) return;
+
+  if (hasDatabase()) {
+    const [inserted] = await getDb()
+      .insert(blogTopics)
+      .values({ topic: cleaned })
+      .returning({ id: blogTopics.id });
+    await auditDb("topic.create", "blog_topic", inserted?.id ?? cleaned);
+    return;
+  }
 
   const store = await readStore();
   const timestamp = now();
@@ -228,11 +404,27 @@ export async function createBlogTopic(topic: string) {
     updatedAt: timestamp,
   });
 
-  await audit(store, "topic.create", "blog_topic", cleaned);
+  await auditLocal(store, "topic.create", "blog_topic", cleaned);
   await writeStore(store);
 }
 
 export async function toggleBlogTopic(topicId: string) {
+  if (hasDatabase()) {
+    const [topic] = await getDb()
+      .select()
+      .from(blogTopics)
+      .where(eq(blogTopics.id, topicId))
+      .limit(1);
+    if (!topic) return;
+
+    await getDb()
+      .update(blogTopics)
+      .set({ active: !topic.active, updatedAt: new Date() })
+      .where(eq(blogTopics.id, topicId));
+    await auditDb(topic.active ? "topic.deactivate" : "topic.activate", "blog_topic", topicId);
+    return;
+  }
+
   const store = await readStore();
   const topic = store.topics.find((item) => item.id === topicId);
   if (!topic) return;
@@ -240,11 +432,59 @@ export async function toggleBlogTopic(topicId: string) {
   topic.active = !topic.active;
   topic.updatedAt = now();
 
-  await audit(store, topic.active ? "topic.activate" : "topic.deactivate", "blog_topic", topicId);
+  await auditLocal(store, topic.active ? "topic.activate" : "topic.deactivate", "blog_topic", topicId);
   await writeStore(store);
 }
 
 export async function createDraftFromTopic(topicId?: string) {
+  if (hasDatabase()) {
+    await ensureSeedTopics();
+    const selected = topicId
+      ? (
+          await getDb()
+            .select()
+            .from(blogTopics)
+            .where(and(eq(blogTopics.id, topicId), eq(blogTopics.active, true)))
+            .limit(1)
+        )[0]
+      : (
+          await getDb()
+            .select()
+            .from(blogTopics)
+            .where(eq(blogTopics.active, true))
+            .orderBy(asc(blogTopics.lastUsedAt), asc(blogTopics.createdAt))
+            .limit(1)
+        )[0];
+
+    const timestamp = new Date();
+    const topic = selected?.topic ?? "Fractional product leadership for startups";
+    const title = topic.replace(/\.$/, "");
+
+    if (selected) {
+      await getDb()
+        .update(blogTopics)
+        .set({ lastUsedAt: timestamp, updatedAt: timestamp })
+        .where(eq(blogTopics.id, selected.id));
+    }
+
+    const [post] = await getDb()
+      .insert(blogPosts)
+      .values({
+        title,
+        slug: slugify(title),
+        tags: ["fractional pm", "startup product"],
+        metaDescription: `A practical Xelerate draft on ${topic.toLowerCase()}.`,
+        bodyMarkdown: `# ${title}\n\nThis is a working draft generated from the topic seed: **${topic}**.\n\n## Why this matters\n\nFounders often know the product needs more structure, but they do not always need a full-time product leader yet. This draft should explain the problem clearly, show practical product judgment, and connect the lesson back to Xelerate's fractional product leadership offer.\n\n## Draft direction\n\n- Start with the founder pain.\n- Explain the product operating principle.\n- Give a concrete framework Lupe can edit.\n- Add internal links only where they genuinely help the reader.\n\n## Editorial note for Lupe\n\nAdd at least one first-hand observation before approval so the post has a real human signal.`,
+        editorsNote: "",
+        suggestedInternalLinks: ["/product-leadership", "/how-it-works", "/pricing"],
+        generationDate: today(),
+      })
+      .returning({ id: blogPosts.id });
+
+    await auditDb("draft.create", "blog_post", post.id);
+    return post.id;
+  }
+
   const store = await readStore();
   const activeTopics = store.topics.filter((topic) => topic.active);
   const selected =
@@ -274,13 +514,13 @@ export async function createDraftFromTopic(topicId?: string) {
     similarityWarning: false,
     suggestedInternalLinks: ["/product-leadership", "/how-it-works", "/pricing"],
     hasXyrenLink: false,
-    generationDate: timestamp.slice(0, 10),
+    generationDate: today(),
     createdAt: timestamp,
     updatedAt: timestamp,
   };
 
   store.posts.unshift(post);
-  await audit(store, "draft.create", "blog_post", post.id);
+  await auditLocal(store, "draft.create", "blog_post", post.id);
   await writeStore(store);
   return post.id;
 }
@@ -296,6 +536,35 @@ export async function createGeneratedDraft(
     suggested_internal_links: string[];
   },
 ) {
+  const existingPostId = await getGeneratedPostIdForToday();
+  if (existingPostId) return existingPostId;
+
+  if (hasDatabase()) {
+    const timestamp = new Date();
+    await getDb()
+      .update(blogTopics)
+      .set({ lastUsedAt: timestamp, updatedAt: timestamp })
+      .where(eq(blogTopics.id, topicId));
+
+    const [post] = await getDb()
+      .insert(blogPosts)
+      .values({
+        title: draft.title.trim(),
+        slug: slugify(draft.slug || draft.title),
+        tags: draft.tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean),
+        metaDescription: draft.meta_description.trim(),
+        bodyMarkdown: draft.body_markdown.trim(),
+        editorsNote: "",
+        suggestedInternalLinks: draft.suggested_internal_links,
+        hasXyrenLink: detectXyrenLink(draft.body_markdown),
+        generationDate: today(),
+      })
+      .returning({ id: blogPosts.id });
+
+    await auditDb("draft.generate.claude", "blog_post", post.id);
+    return post.id;
+  }
+
   const store = await readStore();
   const timestamp = now();
   const topic = store.topics.find((item) => item.id === topicId);
@@ -318,16 +587,14 @@ export async function createGeneratedDraft(
     publishedAt: null,
     similarityWarning: false,
     suggestedInternalLinks: draft.suggested_internal_links,
-    hasXyrenLink: /https?:\/\/(www\.)?xyren\.me|xyren\.me/i.test(
-      draft.body_markdown,
-    ),
-    generationDate: timestamp.slice(0, 10),
+    hasXyrenLink: detectXyrenLink(draft.body_markdown),
+    generationDate: today(),
     createdAt: timestamp,
     updatedAt: timestamp,
   };
 
   store.posts.unshift(post);
-  await audit(store, "draft.generate.claude", "blog_post", post.id);
+  await auditLocal(store, "draft.generate.claude", "blog_post", post.id);
   await writeStore(store);
 
   return post.id;
@@ -337,9 +604,18 @@ export async function logGenerationError(
   error: unknown,
   payload: Record<string, unknown>,
 ) {
-  const store = await readStore();
   const message = error instanceof Error ? error.message : String(error);
 
+  if (hasDatabase()) {
+    const [row] = await getDb()
+      .insert(generationErrors)
+      .values({ error: message, payload })
+      .returning({ id: generationErrors.id });
+    await auditDb("draft.generate.error", "generation_error", row?.id ?? null);
+    return;
+  }
+
+  const store = await readStore();
   store.generationErrors = store.generationErrors ?? [];
   store.generationErrors.unshift({
     id: randomUUID(),
@@ -349,7 +625,7 @@ export async function logGenerationError(
   });
   store.generationErrors = store.generationErrors.slice(0, 100);
 
-  await audit(store, "draft.generate.error", "generation_error", null);
+  await auditLocal(store, "draft.generate.error", "generation_error", null);
   await writeStore(store);
 }
 
@@ -369,12 +645,47 @@ export async function updateAdminPost(
     >
   >,
 ) {
+  if (hasDatabase()) {
+    const updateValues = {
+      title: updates.title,
+      slug: updates.slug ? slugify(updates.slug) : undefined,
+      tags: updates.tags,
+      metaDescription: updates.metaDescription,
+      bodyMarkdown: updates.bodyMarkdown,
+      editorsNote: updates.editorsNote,
+      publishAt: updates.publishAt ? new Date(updates.publishAt) : undefined,
+      rejectionReason: updates.rejectionReason,
+      hasXyrenLink: updates.bodyMarkdown
+        ? detectXyrenLink(updates.bodyMarkdown)
+        : undefined,
+      updatedAt: new Date(),
+    };
+
+    const [post] = await getDb()
+      .update(blogPosts)
+      .set(updateValues)
+      .where(eq(blogPosts.id, postId))
+      .returning();
+
+    if (post) {
+      await auditDb("post.update", "blog_post", postId);
+      return rowToPost(post);
+    }
+    return null;
+  }
+
   const store = await readStore();
   const post = store.posts.find((item) => item.id === postId);
   if (!post) return null;
 
-  Object.assign(post, updates, { updatedAt: now() });
-  await audit(store, "post.update", "blog_post", postId);
+  Object.assign(post, updates, {
+    slug: updates.slug ? slugify(updates.slug) : post.slug,
+    hasXyrenLink: updates.bodyMarkdown
+      ? detectXyrenLink(updates.bodyMarkdown)
+      : post.hasXyrenLink,
+    updatedAt: now(),
+  });
+  await auditLocal(store, "post.update", "blog_post", postId);
   await writeStore(store);
   return post;
 }
@@ -384,6 +695,26 @@ export async function setPostStatus(
   status: BlogPostStatus,
   extra?: Partial<Pick<AdminBlogPost, "publishAt" | "publishedAt" | "rejectionReason">>,
 ) {
+  if (hasDatabase()) {
+    const [post] = await getDb()
+      .update(blogPosts)
+      .set({
+        status,
+        publishAt: extra?.publishAt ? new Date(extra.publishAt) : undefined,
+        publishedAt: extra?.publishedAt ? new Date(extra.publishedAt) : undefined,
+        rejectionReason: extra?.rejectionReason,
+        updatedAt: new Date(),
+      })
+      .where(eq(blogPosts.id, postId))
+      .returning();
+
+    if (post) {
+      await auditDb(`post.${status}`, "blog_post", postId);
+      return rowToPost(post);
+    }
+    return null;
+  }
+
   const store = await readStore();
   const post = store.posts.find((item) => item.id === postId);
   if (!post) return null;
@@ -392,7 +723,45 @@ export async function setPostStatus(
   post.updatedAt = now();
   Object.assign(post, extra);
 
-  await audit(store, `post.${status}`, "blog_post", postId);
+  await auditLocal(store, `post.${status}`, "blog_post", postId);
   await writeStore(store);
   return post;
+}
+
+export async function publishDueScheduledPosts() {
+  if (hasDatabase()) {
+    const duePosts = await getDb()
+      .select({ id: blogPosts.id })
+      .from(blogPosts)
+      .where(and(eq(blogPosts.status, "scheduled"), lte(blogPosts.publishAt, new Date())));
+
+    for (const post of duePosts) {
+      await setPostStatus(post.id, "published", {
+        publishedAt: new Date().toISOString(),
+      });
+    }
+
+    return duePosts.length;
+  }
+
+  const store = await readStore();
+  const timestamp = now();
+  let count = 0;
+
+  for (const post of store.posts) {
+    if (
+      post.status === "scheduled" &&
+      post.publishAt &&
+      new Date(post.publishAt).getTime() <= Date.now()
+    ) {
+      post.status = "published";
+      post.publishedAt = timestamp;
+      post.updatedAt = timestamp;
+      count += 1;
+      await auditLocal(store, "post.published", "blog_post", post.id);
+    }
+  }
+
+  if (count > 0) await writeStore(store);
+  return count;
 }

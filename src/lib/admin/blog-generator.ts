@@ -32,7 +32,7 @@ export interface GeneratedDraft {
 }
 
 function getModel() {
-  return process.env.BLOG_MODEL || "claude-opus-4-7";
+  return process.env.BLOG_MODEL || "claude-opus-4-1-20250805";
 }
 
 function buildUserPrompt(topic: string, recentPosts: string) {

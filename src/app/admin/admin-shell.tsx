@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { BarChart3, FileText, History, LayoutDashboard, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -15,9 +16,10 @@ const navItems = [
 
 interface AdminShellProps {
   children: React.ReactNode;
+  email?: string;
 }
 
-export function AdminShell({ children }: AdminShellProps) {
+export function AdminShell({ children, email = "Lupe" }: AdminShellProps) {
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -85,9 +87,14 @@ export function AdminShell({ children }: AdminShellProps) {
 
             <div className="flex items-center gap-3">
               <span className="hidden text-sm text-muted-foreground sm:inline">
-                {process.env.NEXT_PUBLIC_ADMIN_DISPLAY_EMAIL ?? "Lupe"}
+                {email}
               </span>
-              <Button type="button" variant="outline" size="sm" disabled>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => signOut({ callbackUrl: "/admin/sign-in" })}
+              >
                 Sign out
               </Button>
             </div>

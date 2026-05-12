@@ -9,8 +9,8 @@ Xelerate (xelerate.me) is a fractional product management consultancy website. I
 ## 🏗 Tech Stack
 - **Frontend:** Next.js 14 (App Router), React 18, TypeScript
 - **Styling:** Tailwind CSS 3, shadcn/ui (50+ Radix UI components), tailwindcss-animate
-- **Backend:** Next.js Server Actions/API routes for admin scaffolding
-- **Database:** None connected in production yet. Admin/content schema is scaffolded for future Neon/Postgres via Drizzle.
+- **Backend:** Next.js Server Actions/API routes for admin and cron workflows
+- **Database:** Drizzle + Neon/Postgres for admin/content when `DATABASE_URL` is set; local JSON fallback for development only
 - **Hosting:** Not yet deployed to production (previously on Vite, needs Vercel/Netlify setup)
 - **Analytics:** Removed for now; tracking will be reintroduced later
 - **Key libraries:** react-hook-form, zod, @tanstack/react-query, lucide-react, sonner, next/font (DM Sans, Crimson Pro)
@@ -50,7 +50,7 @@ Xelerate (xelerate.me) is a fractional product management consultancy website. I
 - **Navigation:** Header links to /, /product-leadership, /custom-solutions, /pricing, /blog, /about. Footer has 4-column nav with all pages.
 - **Blog:** 3 pillar posts (~5,000 words total) with cross-linking, author bios, related posts, and CTAs. Article schema with Person author, dateModified, wordCount.
 - **Internal linking:** Every page links to multiple other pages. No orphaned pages.
-- **Database:** No live app database is connected. Supabase runtime helpers and packages have been removed.
+- **Database:** Content engine is wired for Neon/Postgres via Drizzle. Local JSON fallback remains for development without `DATABASE_URL`.
 - **Tracking:** GA4 script loader, analytics helpers, custom Supabase event tracking, page/scroll/section tracking hooks, and lead-submit edge function calls have been removed. Contact form currently validates locally and shows a success toast only.
 - **Not deployed yet** — needs Vercel or similar setup.
 
@@ -88,7 +88,7 @@ Xelerate (xelerate.me) is a fractional product management consultancy website. I
 - **Static blog with file-based content:** Blog posts are React components in `src/app/blog/[slug]/posts/`, with metadata in `src/lib/blog-data.ts`. No CMS yet — easy to migrate to MDX or a headless CMS later.
 - **Dynamic OG images via ImageResponse:** Used Next.js edge runtime opengraph-image.tsx convention instead of static PNGs. Auto-generates branded images per page.
 - **Tracking deferred:** Removed GA4 and custom Supabase tracking for now. Tracking/lead persistence will be designed deliberately later.
-- **No Supabase runtime:** Supabase app helpers/packages were removed before launch. Future admin persistence is planned around Drizzle + Neon/Postgres.
+- **No Supabase runtime:** Supabase app helpers/packages were removed before launch. Admin persistence is wired around Drizzle + Neon/Postgres.
 - **ESLint downgraded to v8:** eslint-config-next requires ESLint 8, not 9. Downgraded from ^9.32.0 to ^8.57.0.
 - **react-router-dom fully removed:** All routing now file-based. Link uses next/link (href not to), useNavigate replaced with useRouter, useLocation with usePathname.
 - **Homepage as hub page:** Root `/` is now a real content page (not a redirect) with links to both services, testimonials, blog preview, and descriptive SEO copy. This preserves the most authoritative URL.
@@ -130,7 +130,7 @@ Xelerate (xelerate.me) is a fractional product management consultancy website. I
 ## 📦 Schema / Data Model
 No direct DB tables managed by this frontend. No tracking or lead persistence is active right now.
 
-Admin/content tables are scaffolded in `src/db/schema.ts` for future Neon/Postgres setup. Production persistence is not active yet.
+Admin/content tables are scaffolded in `src/db/schema.ts` and migrations live in `migrations/`. Production persistence requires applying migrations to Neon/Postgres and setting `DATABASE_URL`.
 
 ## 🔗 External Resources
 - **GitHub (new):** https://github.com/herzenco/Xelerate
@@ -156,3 +156,9 @@ Admin/content tables are scaffolded in `src/db/schema.ts` for future Neon/Postgr
 **Branch/Commit:** main / pending
 **Summary:** Removed remaining legacy database runtime dependencies and helper files before launch. Public site build passes. Admin portal remains scaffolded and intentionally hidden in production until Auth.js, Neon/Postgres persistence, and cron are production-ready.
 **Files changed:** Legacy database packages removed from package manifest/lockfile, old database helper directory deleted, project memory updated.
+
+### Session #4 — 2026-05-12
+**Agent:** Codex
+**Branch/Commit:** main / pending
+**Summary:** Upgraded the AI content generator toward deployment readiness: real Anthropic model ID, Auth.js/Resend magic-link admin auth, DB-backed content store with local fallback, Vercel cron endpoints for draft generation and scheduled publishing, and environment documentation.
+**Files changed:** `auth.ts`, `/admin/sign-in`, `/api/auth`, `/api/blog/*`, `src/lib/admin/content-store.ts`, Drizzle schema/migrations, `vercel.json`, docs/env.

@@ -21,5 +21,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AdminShell>{children}</AdminShell>;
+  return <AdminShell email="Lupe">{children}</AdminShell>;
 }

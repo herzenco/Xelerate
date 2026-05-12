@@ -10,6 +10,7 @@ import {
   updateAdminPost,
 } from "@/lib/admin/content-store";
 import { generateBlogDraft } from "@/lib/admin/blog-generator";
+import { assertAdmin } from "@/lib/admin/auth";
 
 function splitTags(value: FormDataEntryValue | null) {
   return String(value ?? "")
@@ -28,16 +29,19 @@ function normalizeSlug(value: string) {
 }
 
 export async function createTopicAction(formData: FormData) {
+  await assertAdmin();
   await createBlogTopic(String(formData.get("topic") ?? ""));
   revalidatePath("/admin/content/topics");
 }
 
 export async function toggleTopicAction(formData: FormData) {
+  await assertAdmin();
   await toggleBlogTopic(String(formData.get("topicId") ?? ""));
   revalidatePath("/admin/content/topics");
 }
 
 export async function createDraftAction(formData: FormData) {
+  await assertAdmin();
   const postId = await createDraftFromTopic(String(formData.get("topicId") ?? "") || undefined);
   revalidatePath("/admin/content");
 
@@ -47,6 +51,7 @@ export async function createDraftAction(formData: FormData) {
 }
 
 export async function generateClaudeDraftAction() {
+  await assertAdmin();
   try {
     const { postId } = await generateBlogDraft();
     revalidatePath("/admin/content");
@@ -61,6 +66,7 @@ export async function generateClaudeDraftAction() {
 }
 
 export async function savePostAction(formData: FormData) {
+  await assertAdmin();
   const postId = String(formData.get("postId") ?? "");
 
   await updateAdminPost(postId, {
@@ -77,6 +83,7 @@ export async function savePostAction(formData: FormData) {
 }
 
 export async function approvePostAction(formData: FormData) {
+  await assertAdmin();
   const postId = String(formData.get("postId") ?? "");
   const editorsNote = String(formData.get("editorsNote") ?? "").trim();
 
@@ -91,6 +98,7 @@ export async function approvePostAction(formData: FormData) {
 }
 
 export async function publishPostAction(formData: FormData) {
+  await assertAdmin();
   const postId = String(formData.get("postId") ?? "");
   const editorsNote = String(formData.get("editorsNote") ?? "").trim();
 
@@ -107,6 +115,7 @@ export async function publishPostAction(formData: FormData) {
 }
 
 export async function schedulePostAction(formData: FormData) {
+  await assertAdmin();
   const postId = String(formData.get("postId") ?? "");
   const editorsNote = String(formData.get("editorsNote") ?? "").trim();
   const publishAt = String(formData.get("publishAt") ?? "");
@@ -124,6 +133,7 @@ export async function schedulePostAction(formData: FormData) {
 }
 
 export async function rejectPostAction(formData: FormData) {
+  await assertAdmin();
   const postId = String(formData.get("postId") ?? "");
 
   await updateAdminPost(postId, {

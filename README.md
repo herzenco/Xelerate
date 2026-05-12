@@ -1,6 +1,6 @@
 # Xelerate
 
-Next.js App Router site for Xelerate, with a private admin portal in progress for analytics and AI-assisted content operations.
+Next.js App Router site for Xelerate, with a private admin portal for analytics and AI-assisted content operations.
 
 ## Local Development
 
@@ -17,8 +17,8 @@ Open `http://localhost:3000` or the port printed by Next.js.
 - React 18 + TypeScript
 - Tailwind CSS + shadcn/ui
 - Drizzle ORM + Neon Postgres for the admin/content database
-- Auth.js v5 planned for admin magic-link auth
-- Anthropic Claude planned for blog draft generation
+- Auth.js v5 magic-link auth for the admin portal
+- Anthropic Claude for blog draft generation
 
 ## Environment Variables
 
@@ -29,16 +29,20 @@ Required for the admin portal:
 - `AUTH_SECRET`
 - `AUTH_URL`
 - `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
 - `ADMIN_EMAIL_ALLOWLIST`
 - `DATABASE_URL`
-- `UPSTASH_REDIS_REST_URL`
-- `UPSTASH_REDIS_REST_TOKEN`
 - `ANTHROPIC_API_KEY`
 - `BLOG_MODEL`
+- `CRON_SECRET`
+
+Optional/reserved:
+
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
 - `VOYAGE_API_KEY`
 - `PLAUSIBLE_API_KEY`
 - `PLAUSIBLE_SITE_ID`
-- `CRON_SECRET`
 
 ## Secret Rotation Procedure
 
@@ -71,10 +75,9 @@ Rotate these secrets at least every 6 months, and immediately after any suspecte
 
 Schema lives in `src/db/schema.ts`.
 
-The admin content engine currently has a local development fallback at
-`data/admin-content.json` so the workflow can be tested before Neon is
-connected. That file is ignored by git. Production persistence should use the
-Drizzle/Neon schema.
+The admin content engine uses Drizzle + Neon/Postgres when `DATABASE_URL` is
+set. Local development has a fallback at `data/admin-content.json` so the
+workflow can be previewed before Neon is connected. That file is ignored by git.
 
 Generate migrations:
 
@@ -89,6 +92,28 @@ npx drizzle-kit migrate
 ```
 
 The first migration enables `pgvector` and `pgcrypto`.
+
+## Content Generator Deployment
+
+Production requires these Vercel environment variables:
+
+- `DATABASE_URL`
+- `AUTH_SECRET`
+- `AUTH_URL`
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
+- `ADMIN_EMAIL_ALLOWLIST`
+- `ANTHROPIC_API_KEY`
+- `BLOG_MODEL`
+- `CRON_SECRET`
+
+`vercel.json` configures two cron jobs:
+
+- `/api/blog/generate` daily at 10:00 UTC
+- `/api/blog/publish-scheduled` every 15 minutes
+
+The 15-minute scheduled publishing cron requires a Vercel plan that supports
+sub-daily cron frequency.
 
 ## Sprint Docs
 

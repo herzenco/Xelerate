@@ -94,6 +94,7 @@ export const blogPosts = pgTable(
     status: blogPostStatus("status").notNull().default("draft"),
     publishAt: timestamp("publish_at", { withTimezone: true }),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    rejectionReason: text("rejection_reason"),
     embedding: vector("embedding", { dimensions: 1536 }),
     similarityWarning: boolean("similarity_warning").notNull().default(false),
     suggestedInternalLinks: jsonb("suggested_internal_links")
