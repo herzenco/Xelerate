@@ -1,5 +1,3 @@
-import { useSectionTracking } from "@/hooks/useSectionTracking";
-
 const problems = [
   "Roadmaps slip without accountability",
   "Deadlines drift with no one tracking them",
@@ -9,10 +7,8 @@ const problems = [
 ];
 
 const Problem = () => {
-  const sectionRef = useSectionTracking("problem");
-
   return (
-    <section ref={sectionRef} className="py-32 bg-foreground text-background">
+    <section className="py-32 bg-foreground text-background">
       <div className="max-w-5xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           <div>

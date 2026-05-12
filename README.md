@@ -1,73 +1,96 @@
-# Welcome to your Lovable project
+# Xelerate
 
-## Project info
+Next.js App Router site for Xelerate, with a private admin portal in progress for analytics and AI-assisted content operations.
 
-**URL**: https://lovable.dev/projects/53e01930-4a36-46d6-811f-0490f84fcaf4
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/53e01930-4a36-46d6-811f-0490f84fcaf4) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Local Development
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open `http://localhost:3000` or the port printed by Next.js.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Stack
 
-**Use GitHub Codespaces**
+- Next.js 14 App Router
+- React 18 + TypeScript
+- Tailwind CSS + shadcn/ui
+- Drizzle ORM + Neon Postgres for the admin/content database
+- Auth.js v5 planned for admin magic-link auth
+- Anthropic Claude planned for blog draft generation
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Environment Variables
 
-## What technologies are used for this project?
+Copy `.env.example` to `.env.local` and fill the values.
 
-This project is built with:
+Required for the admin portal:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- `AUTH_SECRET`
+- `AUTH_URL`
+- `RESEND_API_KEY`
+- `ADMIN_EMAIL_ALLOWLIST`
+- `DATABASE_URL`
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+- `ANTHROPIC_API_KEY`
+- `BLOG_MODEL`
+- `VOYAGE_API_KEY`
+- `PLAUSIBLE_API_KEY`
+- `PLAUSIBLE_SITE_ID`
+- `CRON_SECRET`
 
-## How can I deploy this project?
+## Secret Rotation Procedure
 
-Simply open [Lovable](https://lovable.dev/projects/53e01930-4a36-46d6-811f-0490f84fcaf4) and click on Share -> Publish.
+Rotate these secrets at least every 6 months, and immediately after any suspected exposure.
 
-## Can I connect a custom domain to my Lovable project?
+### `ANTHROPIC_API_KEY`
 
-Yes, you can!
+1. Create a new key in Anthropic.
+2. Update the Vercel environment variable.
+3. Redeploy.
+4. Run a test draft generation.
+5. Revoke the old key.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### `RESEND_API_KEY`
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1. Create a new sending key in Resend.
+2. Update the Vercel environment variable.
+3. Redeploy.
+4. Send a test magic-link email.
+5. Revoke the old key.
+
+### `AUTH_SECRET`
+
+1. Generate a new high-entropy value.
+2. Update the Vercel environment variable.
+3. Redeploy.
+4. Expect all existing admin sessions and magic links to become invalid.
+
+## Database
+
+Schema lives in `src/db/schema.ts`.
+
+The admin content engine currently has a local development fallback at
+`data/admin-content.json` so the workflow can be tested before Neon is
+connected. That file is ignored by git. Production persistence should use the
+Drizzle/Neon schema.
+
+Generate migrations:
+
+```sh
+npx drizzle-kit generate
+```
+
+Apply migrations against the configured database:
+
+```sh
+npx drizzle-kit migrate
+```
+
+The first migration enables `pgvector` and `pgcrypto`.
+
+## Sprint Docs
+
+- `docs/sprints/admin-portal-v2.md`
+- `PROJECT_MEMORY.md`

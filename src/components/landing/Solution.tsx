@@ -1,5 +1,4 @@
 import { Check } from "lucide-react";
-import { useSectionTracking } from "@/hooks/useSectionTracking";
 
 const benefits = [
   "Hands-on product leadership",
@@ -11,10 +10,8 @@ const benefits = [
 ];
 
 const Solution = () => {
-  const sectionRef = useSectionTracking("solution");
-
   return (
-    <section ref={sectionRef} className="py-32 bg-background">
+    <section className="py-32 bg-background">
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6">

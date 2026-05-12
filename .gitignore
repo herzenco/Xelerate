@@ -17,6 +17,10 @@ dist-ssr
 out/
 next-env.d.ts
 
+# Local admin/content development store
+data/admin-content.json
+.Codex/backups/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

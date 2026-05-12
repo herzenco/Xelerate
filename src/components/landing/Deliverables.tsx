@@ -8,7 +8,6 @@ import {
   ArrowUpRight, 
   Briefcase 
 } from "lucide-react";
-import { useSectionTracking } from "@/hooks/useSectionTracking";
 
 const deliverables = [
   {
@@ -54,10 +53,8 @@ const deliverables = [
 ];
 
 const Deliverables = () => {
-  const sectionRef = useSectionTracking("deliverables");
-
   return (
-    <section ref={sectionRef} className="py-32 bg-secondary">
+    <section className="py-32 bg-secondary">
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6">

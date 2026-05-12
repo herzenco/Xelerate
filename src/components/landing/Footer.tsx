@@ -1,18 +1,6 @@
-"use client";
-
-import { usePathname } from "next/navigation";
 import logo from "@/assets/xelerate-logo.png";
-import { analytics } from "@/lib/analytics";
-import { remoteAnalytics } from "@/lib/tracking";
 
 const Footer = () => {
-  const pathname = usePathname();
-
-  const handleLinkClick = (linkName: string) => {
-    analytics.trackNavigation(linkName, 'footer');
-    remoteAnalytics.trackNavigation(linkName, 'footer', pathname);
-  };
-
   return (
     <footer className="py-16 bg-secondary border-t border-border" role="contentinfo">
       <div className="max-w-5xl mx-auto px-6">
@@ -22,7 +10,7 @@ const Footer = () => {
             <a
               href="/"
               className="flex items-center mb-4"
-              onClick={() => handleLinkClick('home')}
+
               aria-label="Xelerate - Return to homepage"
             >
               <img src={logo.src} alt="" className="h-8" aria-hidden="true" />
@@ -30,7 +18,7 @@ const Footer = () => {
             </a>
             <a
               href="mailto:hello@fractionalpm.com"
-              onClick={() => handleLinkClick('contact')}
+
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               hello@fractionalpm.com
@@ -45,7 +33,7 @@ const Footer = () => {
                 <li>
                   <a
                     href="/product-leadership"
-                    onClick={() => handleLinkClick('product-leadership')}
+
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Product Leadership
@@ -54,7 +42,7 @@ const Footer = () => {
                 <li>
                   <a
                     href="/custom-solutions"
-                    onClick={() => handleLinkClick('custom-solutions')}
+
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Custom Solutions
@@ -72,7 +60,7 @@ const Footer = () => {
                 <li>
                   <a
                     href="/about"
-                    onClick={() => handleLinkClick('about')}
+
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     About
@@ -81,7 +69,7 @@ const Footer = () => {
                 <li>
                   <a
                     href="/how-it-works"
-                    onClick={() => handleLinkClick('how-it-works')}
+
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     How It Works
@@ -90,7 +78,7 @@ const Footer = () => {
                 <li>
                   <a
                     href="/pricing"
-                    onClick={() => handleLinkClick('pricing')}
+
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Pricing
@@ -108,7 +96,7 @@ const Footer = () => {
                 <li>
                   <a
                     href="/blog"
-                    onClick={() => handleLinkClick('blog')}
+
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Blog
@@ -117,7 +105,7 @@ const Footer = () => {
                 <li>
                   <a
                     href="/faq"
-                    onClick={() => handleLinkClick('faq')}
+
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     FAQ

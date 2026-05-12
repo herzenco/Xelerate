@@ -1,5 +1,5 @@
 # PROJECT_MEMORY.md
-> Last updated: 2026-05-06 | Session #1 | Agent: Claude Opus 4.6
+> Last updated: 2026-05-12 | Session #3 | Agent: Codex
 
 ---
 
@@ -9,15 +9,15 @@ Xelerate (xelerate.me) is a fractional product management consultancy website. I
 ## 🏗 Tech Stack
 - **Frontend:** Next.js 14 (App Router), React 18, TypeScript
 - **Styling:** Tailwind CSS 3, shadcn/ui (50+ Radix UI components), tailwindcss-animate
-- **Backend:** Supabase Edge Functions (analytics + lead capture), Supabase SDK (@supabase/ssr + @supabase/supabase-js)
-- **Database:** Supabase (project: jmpgtpjytfionovnyvkf) — used for event tracking and lead submission
+- **Backend:** Next.js Server Actions/API routes for admin scaffolding
+- **Database:** None connected in production yet. Admin/content schema is scaffolded for future Neon/Postgres via Drizzle.
 - **Hosting:** Not yet deployed to production (previously on Vite, needs Vercel/Netlify setup)
-- **Analytics:** GA4 (G-HWY2TQ2MJ4) + custom Supabase tracking
+- **Analytics:** Removed for now; tracking will be reintroduced later
 - **Key libraries:** react-hook-form, zod, @tanstack/react-query, lucide-react, sonner, next/font (DM Sans, Crimson Pro)
 
 ## 📁 File & Folder Map
 - `src/app/` — Next.js App Router pages (17 routes total)
-  - `layout.tsx` — Root layout with fonts, metadata, analytics, providers
+  - `layout.tsx` — Root layout with fonts, metadata, providers
   - `page.tsx` — Homepage (hub page linking to both services)
   - `product-leadership/` — Main service page ($2K/mo fractional PM)
   - `custom-solutions/` — Custom development services page
@@ -31,21 +31,17 @@ Xelerate (xelerate.me) is a fractional product management consultancy website. I
 - `src/components/` — Reusable components
   - `landing/` — Page sections (Header, Footer, Hero, Pricing, Testimonials, etc.)
   - `ui/` — shadcn/ui components (50+ files)
-  - `Analytics.tsx` — GA4 script loader
   - `AuthorBio.tsx` — Blog author bio component
   - `JsonLd.tsx` — Reusable JSON-LD injector
 - `src/lib/` — Utilities
-  - `analytics.ts` — GA4 event tracking helpers
-  - `tracking.ts` — Supabase remote analytics + lead submission
   - `blog-data.ts` — Static blog post metadata (slug, title, date, keywords, wordCount)
-  - `constants.ts` — SITE_URL, SITE_NAME, GA_MEASUREMENT_ID
+  - `constants.ts` — SITE_URL, SITE_NAME
   - `structured-data.ts` — JSON-LD schema helpers (Organization, Service, etc.)
-- `src/utils/supabase/` — Supabase client helpers (server.ts, client.ts, middleware.ts)
-- `src/hooks/` — Custom hooks (usePageTracking, useScrollTracking, useSectionTracking, use-mobile)
+- `src/hooks/` — Custom hooks (use-mobile)
 - `src/assets/` — xelerate-logo.png
 - `public/` — favicon.ico, favicon.png, apple-touch-icon.png, llms.txt, placeholder.svg
 - `next.config.mjs` — Security headers, image optimization (AVIF/WebP), poweredByHeader: false
-- `.env.local` — NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY (not committed)
+- `.env.local` — local development values only; not committed
 
 ## ✅ Current State
 - **Build:** Clean — `npm run build` passes with 17 static/SSG routes, 0 errors
@@ -54,7 +50,8 @@ Xelerate (xelerate.me) is a fractional product management consultancy website. I
 - **Navigation:** Header links to /, /product-leadership, /custom-solutions, /pricing, /blog, /about. Footer has 4-column nav with all pages.
 - **Blog:** 3 pillar posts (~5,000 words total) with cross-linking, author bios, related posts, and CTAs. Article schema with Person author, dateModified, wordCount.
 - **Internal linking:** Every page links to multiple other pages. No orphaned pages.
-- **Supabase:** SDK installed and configured (server + client + middleware helpers). Connected to project jmpgtpjytfionovnyvkf. Old edge function tracking (iftavwzmvuqykujebini) still in tracking.ts.
+- **Database:** No live app database is connected. Supabase runtime helpers and packages have been removed.
+- **Tracking:** GA4 script loader, analytics helpers, custom Supabase event tracking, page/scroll/section tracking hooks, and lead-submit edge function calls have been removed. Contact form currently validates locally and shows a success toast only.
 - **Not deployed yet** — needs Vercel or similar setup.
 
 ## 🔨 What Was Done This Session
@@ -69,8 +66,8 @@ Xelerate (xelerate.me) is a fractional product management consultancy website. I
 - Added sitemap.ts, robots.ts, manifest.ts with all routes
 - Added security headers (HSTS, X-Frame-Options, CSP, etc.) to next.config.mjs
 - Added structured data across all pages (Organization, Service, FAQPage, Article, HowTo, BreadcrumbList)
-- Set up Supabase SDK (@supabase/ssr) with server/client/middleware helpers
-- Installed Supabase agent skills
+- Removed old analytics/tracking layer and stale references to the old Supabase project
+- Installed database workflow agent skills
 - Created llms.txt for AI crawlers
 - Created AuthorBio component for blog posts
 - Added cross-links between all blog posts
@@ -90,14 +87,14 @@ Xelerate (xelerate.me) is a fractional product management consultancy website. I
 - **Server/client component split:** Page-level `page.tsx` files are Server Components (export metadata + structured data), with `*-content.tsx` client wrappers containing the interactive UI. This maximizes SSR for SEO while keeping hooks/interactivity working.
 - **Static blog with file-based content:** Blog posts are React components in `src/app/blog/[slug]/posts/`, with metadata in `src/lib/blog-data.ts`. No CMS yet — easy to migrate to MDX or a headless CMS later.
 - **Dynamic OG images via ImageResponse:** Used Next.js edge runtime opengraph-image.tsx convention instead of static PNGs. Auto-generates branded images per page.
-- **Kept dual analytics (GA4 + Supabase):** Both systems preserved. GA4 for standard analytics, Supabase edge functions for custom event tracking and lead capture.
-- **Two Supabase projects:** Old project (iftavwzmvuqykujebini) handles analytics edge functions. New project (jmpgtpjytfionovnyvkf) set up for future DB/auth needs. tracking.ts still points to old project.
+- **Tracking deferred:** Removed GA4 and custom Supabase tracking for now. Tracking/lead persistence will be designed deliberately later.
+- **No Supabase runtime:** Supabase app helpers/packages were removed before launch. Future admin persistence is planned around Drizzle + Neon/Postgres.
 - **ESLint downgraded to v8:** eslint-config-next requires ESLint 8, not 9. Downgraded from ^9.32.0 to ^8.57.0.
 - **react-router-dom fully removed:** All routing now file-based. Link uses next/link (href not to), useNavigate replaced with useRouter, useLocation with usePathname.
 - **Homepage as hub page:** Root `/` is now a real content page (not a redirect) with links to both services, testimonials, blog preview, and descriptive SEO copy. This preserves the most authoritative URL.
 
 ## 🐛 Known Bugs / Issues
-- **Two Supabase projects in use:** tracking.ts still points to old project (iftavwzmvuqykujebini). New SDK helpers point to new project (jmpgtpjytfionovnyvkf). Need to consolidate.
+- **Contact form is not persisted:** After tracking removal, the form validates locally and shows a success toast, but it does not send data anywhere yet.
 - **Person schema on About page uses generic "Xelerate Founder"** — needs real founder name, photo, and credentials for proper E-E-A-T.
 - **Blog author is "The Xelerate Team"** — should be a named individual for stronger E-E-A-T signals.
 - **Organization sameAs is empty** on homepage and about page — should include social profile URLs when available.
@@ -112,7 +109,8 @@ Xelerate (xelerate.me) is a fractional product management consultancy website. I
 - [ ] Submit sitemap to Google Search Console
 - [ ] Set up Bing Webmaster Tools (powers ChatGPT search)
 - [ ] Add real founder name, photo, and bio to About page + Person schema
-- [ ] Consolidate Supabase projects (migrate edge functions to new project or unify)
+- [ ] Design new lead-capture flow (database/API route or external form service)
+- [ ] Design analytics/tracking plan before reintroducing scripts or event collection
 - [ ] Create /privacy and /terms pages
 - [ ] Add proper 192x192 and 512x512 PWA icons
 - [ ] Set up Google Search Console verification meta tag
@@ -122,40 +120,39 @@ Xelerate (xelerate.me) is a fractional product management consultancy website. I
 - [ ] Consider MDX or headless CMS for blog (current file-based approach works but won't scale past ~20 posts)
 - [ ] Add social profile URLs to Organization schema (LinkedIn, Twitter)
 - [ ] Replace img tags with next/image for logo
-- [ ] Set up Supabase Auth if admin/dashboard features are planned
+- [ ] Wire Auth.js magic-link auth for admin/dashboard features
 - [ ] Run Lighthouse audit post-deploy (target 90+ on Performance and SEO)
 
 ## 🔐 Environment & Config Notes
-- `NEXT_PUBLIC_SUPABASE_URL` — New Supabase project URL (in .env.local)
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — New Supabase anon key (in .env.local)
-- `NEXT_PUBLIC_GA_MEASUREMENT_ID` — GA4 ID (defaults to G-HWY2TQ2MJ4 in constants.ts)
 - `NEXT_PUBLIC_SITE_URL` — Site URL (defaults to https://xelerate.me in constants.ts)
-- Old Supabase URL hardcoded in `src/lib/tracking.ts` (iftavwzmvuqykujebini) — env var override available via NEXT_PUBLIC_SUPABASE_URL
 - `.env.local.example` documents all required env vars
 
 ## 📦 Schema / Data Model
-No direct DB tables managed by this frontend. Data flows:
+No direct DB tables managed by this frontend. No tracking or lead persistence is active right now.
 
-**Supabase Edge Functions (old project — iftavwzmvuqykujebini):**
-- `POST /functions/v1/track-event` — eventType, pagePath, eventData, sessionId
-- `POST /functions/v1/submit-lead` — name, email, phone, company, url, message, source, page_source
-
-**Supabase SDK (new project — jmpgtpjytfionovnyvkf):**
-- Server/client helpers configured but no tables accessed yet
-- Ready for future auth, CMS, or dashboard features
+Admin/content tables are scaffolded in `src/db/schema.ts` for future Neon/Postgres setup. Production persistence is not active yet.
 
 ## 🔗 External Resources
 - **GitHub (new):** https://github.com/herzenco/Xelerate
 - **GitHub (old):** https://github.com/herzenco/xelerate.me-front
 - **Production URL:** https://xelerate.me (not yet deployed with Next.js)
-- **Supabase (new):** https://supabase.com/dashboard/project/jmpgtpjytfionovnyvkf
-- **Supabase (old/analytics):** https://supabase.com/dashboard/project/iftavwzmvuqykujebini
-- **GA4:** Measurement ID G-HWY2TQ2MJ4
 
 ## 🗓 Session Log
 
 ### Session #1 — 2026-05-05/06
 **Agent:** Claude Opus 4.6 (1M context)
 **Branch/Commit:** main / `16a81e6` (Remove leftover Vite/SPA files from pre-migration)
-**Summary:** Full migration from Lovable/Vite SPA to Next.js App Router. Expanded from 2 pages to 17 routes. Complete SEO overhaul with structured data, dynamic OG images, sitemap, robots, llms.txt. Added blog with 3 pillar posts. Set up Supabase SDK. Ran comprehensive SEO audit and fixed all critical/high issues (navigation, internal linking, metadata, schemas). Cleaned repo and pushed to new GitHub repo (herzenco/Xelerate).
+**Summary:** Full migration from Lovable/Vite SPA to Next.js App Router. Expanded from 2 pages to 17 routes. Complete SEO overhaul with structured data, dynamic OG images, sitemap, robots, llms.txt. Added blog with 3 pillar posts. Ran comprehensive SEO audit and fixed all critical/high issues (navigation, internal linking, metadata, schemas). Cleaned repo and pushed to new GitHub repo (herzenco/Xelerate).
 **Files changed:** 187 files added, 15 old Vite files removed. Net: ~24,000 lines added.
+
+### Session #2 — 2026-05-07
+**Agent:** Codex
+**Branch/Commit:** main / uncommitted at time of update
+**Summary:** Removed old tracking and all analytics/event tracking code. Deleted GA4 script loader, analytics helpers, custom event tracking helper, page/scroll/section tracking hooks, and component event calls. Updated env example and project memory to remove stale database references.
+**Files changed:** Tracking-related source files deleted; landing/app components simplified; docs/env cleaned.
+
+### Session #3 — 2026-05-12
+**Agent:** Codex
+**Branch/Commit:** main / pending
+**Summary:** Removed remaining legacy database runtime dependencies and helper files before launch. Public site build passes. Admin portal remains scaffolded and intentionally hidden in production until Auth.js, Neon/Postgres persistence, and cron are production-ready.
+**Files changed:** Legacy database packages removed from package manifest/lockfile, old database helper directory deleted, project memory updated.

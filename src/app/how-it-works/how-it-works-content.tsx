@@ -2,8 +2,6 @@
 
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
-import { usePageTracking } from "@/hooks/usePageTracking";
-import { useScrollTracking } from "@/hooks/useScrollTracking";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
@@ -91,9 +89,6 @@ const milestones = [
 ];
 
 const HowItWorksContent = () => {
-  usePageTracking();
-  useScrollTracking();
-
   return (
     <>
       <a

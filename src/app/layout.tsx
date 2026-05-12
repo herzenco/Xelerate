@@ -3,7 +3,7 @@ import { DM_Sans, Crimson_Pro } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { Providers } from "./providers";
-import { Analytics } from "@/components/Analytics";
+import { VercelAnalytics } from "@/components/VercelAnalytics";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -57,8 +57,8 @@ export default function RootLayout({
     >
       <body className="font-sans antialiased">
         <Providers>{children}</Providers>
+        <VercelAnalytics />
         <Toaster />
-        <Analytics />
       </body>
     </html>
   );

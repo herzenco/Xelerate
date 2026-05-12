@@ -2,8 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight } from "lucide-react";
-import { analytics } from "@/lib/analytics";
-import { remoteAnalytics } from "@/lib/tracking";
 import Link from "next/link";
 
 const features = [
@@ -16,11 +14,6 @@ const features = [
 ];
 
 const Pricing = () => {
-  const handleCTAClick = () => {
-    analytics.trackCTAClick('Start your subscription', 'pricing');
-    remoteAnalytics.trackCTAClick('Start your subscription', '/product-leadership');
-  };
-
   return (
     <section className="py-32 bg-background">
       <div className="max-w-3xl mx-auto px-6">
@@ -56,7 +49,7 @@ const Pricing = () => {
             ))}
           </div>
           
-          <Button variant="accent" size="xl" className="w-full sm:w-auto group" asChild onClick={handleCTAClick}>
+          <Button variant="accent" size="xl" className="w-full sm:w-auto group" asChild>
             <a href="https://buy.stripe.com/6oU3cub9s7C74X0bu07kc0j" target="_blank" rel="noopener noreferrer">
               Start your subscription
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

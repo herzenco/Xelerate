@@ -5,6 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
+      disallow: ['/admin', '/admin/'],
     },
     sitemap: 'https://xelerate.me/sitemap.xml',
   }

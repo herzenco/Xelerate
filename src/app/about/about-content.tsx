@@ -2,8 +2,6 @@
 
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
-import { usePageTracking } from "@/hooks/usePageTracking";
-import { useScrollTracking } from "@/hooks/useScrollTracking";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, Eye, Zap, Target } from "lucide-react";
 
@@ -56,9 +54,6 @@ const problems = [
 ];
 
 const AboutContent = () => {
-  usePageTracking();
-  useScrollTracking();
-
   return (
     <>
       <a

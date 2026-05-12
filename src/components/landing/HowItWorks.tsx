@@ -1,4 +1,3 @@
-import { useSectionTracking } from "@/hooks/useSectionTracking";
 import Link from "next/link";
 
 const steps = [
@@ -20,10 +19,8 @@ const steps = [
 ];
 
 const HowItWorks = () => {
-  const sectionRef = useSectionTracking("how_it_works");
-
   return (
-    <section ref={sectionRef} className="py-32 bg-background">
+    <section className="py-32 bg-background">
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6">

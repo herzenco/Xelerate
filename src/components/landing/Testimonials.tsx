@@ -1,5 +1,3 @@
-import { useSectionTracking } from "@/hooks/useSectionTracking";
-
 const testimonials = [
   {
     quote: "Xelerate brought order to our chaos. In just 48 hours, we had a clear roadmap, priorities locked in, and the entire team rowing in the same direction. We stopped guessing and actually started shipping.",
@@ -19,11 +17,8 @@ const testimonials = [
 ];
 
 const Testimonials = () => {
-  const sectionRef = useSectionTracking("testimonials");
-
   return (
-    <section 
-      ref={sectionRef} 
+    <section
       id="testimonials"
       aria-labelledby="testimonials-heading" 
       className="py-32 bg-foreground text-background"

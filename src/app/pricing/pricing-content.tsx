@@ -2,8 +2,6 @@
 
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
-import { usePageTracking } from "@/hooks/usePageTracking";
-import { useScrollTracking } from "@/hooks/useScrollTracking";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -87,9 +85,6 @@ const pricingFAQs = [
 ];
 
 const PricingContent = () => {
-  usePageTracking();
-  useScrollTracking();
-
   return (
     <>
       <a

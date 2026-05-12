@@ -13,13 +13,9 @@ import Pricing from "@/components/landing/Pricing";
 import FinalCTA from "@/components/landing/FinalCTA";
 import Footer from "@/components/landing/Footer";
 import StickyMobileCTA from "@/components/landing/StickyMobileCTA";
-import { usePageTracking } from "@/hooks/usePageTracking";
-import { useScrollTracking } from "@/hooks/useScrollTracking";
 import Link from "next/link";
 
 const ProductLeadershipContent = () => {
-  usePageTracking();
-  useScrollTracking();
 
   return (
     <>

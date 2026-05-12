@@ -2,20 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { analytics } from "@/lib/analytics";
-import { remoteAnalytics } from "@/lib/tracking";
 
 const FinalCTA = () => {
-  const handleCTAClick = (ctaName: string) => {
-    analytics.trackCTAClick(ctaName, 'final-cta');
-    remoteAnalytics.trackCTAClick(ctaName, '/product-leadership');
-  };
-
-  const handleConsultationClick = () => {
-    analytics.trackCTAClick('Book a free call', 'final-cta');
-    remoteAnalytics.trackConsultationClick('final_cta', '/product-leadership');
-  };
-
   return (
     <section className="py-32 bg-background relative overflow-hidden">
       {/* Gradient orb */}
@@ -33,13 +21,13 @@ const FinalCTA = () => {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button variant="accent" size="xl" className="group" asChild onClick={() => handleCTAClick('Start your subscription')}>
+          <Button variant="accent" size="xl" className="group" asChild>
             <a href="https://buy.stripe.com/6oU3cub9s7C74X0bu07kc0j" target="_blank" rel="noopener noreferrer">
               Start your subscription
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </a>
           </Button>
-          <Button variant="outline" size="xl" asChild onClick={handleConsultationClick}>
+          <Button variant="outline" size="xl" asChild>
             <a href="https://calendly.com/herzenco/xelerate-intro-call" target="_blank" rel="noopener noreferrer">
               Book a free call
             </a>

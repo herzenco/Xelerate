@@ -1,5 +1,4 @@
 import { ArrowRight } from "lucide-react";
-import { useSectionTracking } from "@/hooks/useSectionTracking";
 
 const audiences = [
   "Post-seed startups ready to execute",
@@ -10,10 +9,8 @@ const audiences = [
 ];
 
 const WhoIsFor = () => {
-  const sectionRef = useSectionTracking("who_is_for");
-
   return (
-    <section ref={sectionRef} className="py-32 bg-secondary">
+    <section className="py-32 bg-secondary">
       <div className="max-w-5xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>

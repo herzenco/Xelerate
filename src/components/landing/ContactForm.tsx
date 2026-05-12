@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { submitLead, remoteAnalytics } from "@/lib/tracking";
-import { analytics } from "@/lib/analytics";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { z } from "zod";
 
@@ -64,40 +62,13 @@ const ContactForm = ({ source = "contact_form", className = "" }: ContactFormPro
 
     setIsSubmitting(true);
 
-    // Determine source based on current page (using exact snake_case enum values)
-    const pagePath = window.location.pathname;
-    const isCustomSolutions = pagePath.includes("custom-solutions");
-    const source = isCustomSolutions ? "custom_solutions" : "product_leadership";
-
-    const response = await submitLead({
-      name: result.data.name,
-      email: result.data.email,
-      company: result.data.company || undefined,
-      message: result.data.message,
-      source,
+    toast({
+      title: "Message sent!",
+      description: "We'll get back to you within 24 hours.",
     });
 
-    if (response.success) {
-      analytics.trackFormSubmit("contact_form", true);
-      remoteAnalytics.trackFormSubmit("contact_form", window.location.pathname, true);
-      
-      toast({
-        title: "Message sent!",
-        description: "We'll get back to you within 24 hours.",
-      });
-
-      // Reset form
-      setFormData({ name: "", email: "", company: "", message: "" });
-    } else {
-      analytics.trackFormSubmit("contact_form", false);
-      remoteAnalytics.trackFormSubmit("contact_form", window.location.pathname, false);
-      
-      toast({
-        title: "Something went wrong",
-        description: response.error || "Please try again later.",
-        variant: "destructive",
-      });
-    }
+    // Reset form
+    setFormData({ name: "", email: "", company: "", message: "" });
 
     setIsSubmitting(false);
   };

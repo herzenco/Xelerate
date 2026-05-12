@@ -14,8 +14,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ArrowRight, Loader2 } from "lucide-react";
-import { submitLead, remoteAnalytics } from "@/lib/tracking";
-import { analytics } from "@/lib/analytics";
 import { useToast } from "@/hooks/use-toast";
 
 // Accept domains (example.com) or full URLs (https://example.com)
@@ -45,9 +43,8 @@ interface GetStartedModalProps {
   source?: string; // e.g. "/product-leadership" or "/custom-solutions"
 }
 
-const GetStartedModal = ({ open, onOpenChange, source }: GetStartedModalProps) => {
+const GetStartedModal = ({ open, onOpenChange }: GetStartedModalProps) => {
   const formId = useId();
-  const pagePath = source || window.location.pathname;
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -83,41 +80,8 @@ const GetStartedModal = ({ open, onOpenChange, source }: GetStartedModalProps) =
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      // Track the form submission
-      analytics.trackCTAClick("Get Started - Form Submit", "hero_modal");
-      remoteAnalytics.trackCTAClick("Get Started - Form Submit", pagePath);
-
-      // Determine lead source based on page (using exact snake_case enum values)
-      const isCustomSolutions = pagePath.includes("custom-solutions");
-      const source = isCustomSolutions ? "custom_solutions" : "product_leadership";
-
-      // Submit the lead with all fields
-      const leadResult = await submitLead({
-        name: formData.name,
-        email: formData.email,
-        company: formData.company,
-        url: formData.url || undefined,
-        message: formData.message,
-        source,
-      });
-
-      if (!leadResult.success) {
-        analytics.trackFormSubmit("hero_get_started", false);
-        remoteAnalytics.trackFormSubmit("hero_get_started", pagePath, false);
-
-        toast({
-          title: "Couldn't send your request",
-          description: leadResult.error || "Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      analytics.trackFormSubmit("hero_get_started", true);
-      remoteAnalytics.trackFormSubmit("hero_get_started", pagePath, true);
-
       // Reset form and close modal
       setFormData({ name: "", email: "", company: "", url: "", message: "" });
       onOpenChange(false);
@@ -128,8 +92,6 @@ const GetStartedModal = ({ open, onOpenChange, source }: GetStartedModalProps) =
       });
     } catch (error) {
       console.error("Form submission error:", error);
-      analytics.trackFormSubmit("hero_get_started", false);
-      remoteAnalytics.trackFormSubmit("hero_get_started", pagePath, false);
 
       toast({
         title: "Something went wrong",

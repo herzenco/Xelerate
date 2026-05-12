@@ -3,16 +3,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { analytics } from "@/lib/analytics";
-import { remoteAnalytics } from "@/lib/tracking";
 import GetStartedModal from "./GetStartedModal";
 
 const Hero = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleGetStartedClick = () => {
-    analytics.trackCTAClick('Get Started', 'hero');
-    remoteAnalytics.trackCTAClick('Get Started', '/product-leadership');
     setIsModalOpen(true);
   };
 

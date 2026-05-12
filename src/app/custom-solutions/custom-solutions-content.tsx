@@ -22,12 +22,8 @@ import {
   ExpertiseIcon,
   CheckIcon,
 } from "@/components/icons/XelerateIcons";
-import { analytics } from "@/lib/analytics";
-import { remoteAnalytics } from "@/lib/tracking";
 import ContactForm from "@/components/landing/ContactForm";
 import GetStartedModal from "@/components/landing/GetStartedModal";
-import { usePageTracking } from "@/hooks/usePageTracking";
-import { useScrollTracking } from "@/hooks/useScrollTracking";
 import Link from "next/link";
 
 const services = [
@@ -187,23 +183,8 @@ const CustomSolutionsContent = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  usePageTracking();
-  useScrollTracking();
-
-  const handleCTAClick = (ctaName: string, location: string) => {
-    analytics.trackCTAClick(ctaName, location);
-    remoteAnalytics.trackCTAClick(ctaName, "/custom-solutions");
-  };
-
-  const handleGetStartedClick = (location: string) => {
-    analytics.trackCTAClick("Get started today", location);
-    remoteAnalytics.trackCTAClick("Get started today", "/custom-solutions");
+  const handleGetStartedClick = () => {
     setIsModalOpen(true);
-  };
-
-  const handleConsultationClick = (location: string) => {
-    analytics.trackCTAClick("Schedule a consultation", location);
-    remoteAnalytics.trackConsultationClick(location, "/custom-solutions");
   };
 
   const scrollToContact = () => {
@@ -285,9 +266,7 @@ const CustomSolutionsContent = () => {
                   variant="accent"
                   size="lg"
                   className="group"
-                  onClick={() =>
-                    handleGetStartedClick("custom-solutions-hero")
-                  }
+                  onClick={() => handleGetStartedClick()}
                 >
                   Get started today
                   <ArrowRight
@@ -299,13 +278,7 @@ const CustomSolutionsContent = () => {
                   variant="outline"
                   size="lg"
                   className="group"
-                  onClick={() => {
-                    handleCTAClick(
-                      "Talk to us",
-                      "custom-solutions-hero"
-                    );
-                    scrollToContact();
-                  }}
+                  onClick={() => scrollToContact()}
                 >
                   Talk to us
                   <ArrowRight
@@ -616,9 +589,6 @@ const CustomSolutionsContent = () => {
                     size="lg"
                     className="group"
                     asChild
-                    onClick={() =>
-                      handleConsultationClick("contact-section")
-                    }
                   >
                     <a
                       href="https://calendly.com/herzenco/xelerate-custom-solutions-consulting"
@@ -670,7 +640,7 @@ const CustomSolutionsContent = () => {
               variant="accent"
               size="lg"
               className="group"
-              onClick={() => handleGetStartedClick("custom-solutions-cta")}
+              onClick={() => handleGetStartedClick()}
             >
               Get started today
               <ArrowRight
