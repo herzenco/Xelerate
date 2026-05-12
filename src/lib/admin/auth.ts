@@ -25,6 +25,15 @@ export function isAdminAuthConfigured() {
 }
 
 export async function assertAdmin() {
+  if (process.env.NODE_ENV === "development" && !process.env.AUTH_SECRET) {
+    return {
+      user: {
+        email: adminAllowlist()[0] ?? "lupe@xelerate.me",
+      },
+      expires: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    };
+  }
+
   const session = await auth();
 
   if (!isAdminEmail(session?.user?.email)) {
