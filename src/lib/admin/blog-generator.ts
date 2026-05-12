@@ -32,7 +32,7 @@ export interface GeneratedDraft {
 }
 
 function getModel() {
-  return process.env.BLOG_MODEL || "claude-opus-4-1-20250805";
+  return process.env.BLOG_MODEL || "claude-sonnet-4-5-20250929";
 }
 
 function buildUserPrompt(topic: string, recentPosts: string) {
@@ -75,69 +75,74 @@ export async function generateBlogDraft() {
 
   try {
     const client = getAnthropicClient();
-    const message = await client.messages.create({
-      model: getModel(),
-      max_tokens: 4096,
-      system: BLOG_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: buildUserPrompt(topic.topic, recentPosts),
-        },
-      ],
-      tools: [
-        {
-          name: "save_blog_draft",
-          description:
-            "Save a structured Xelerate blog draft for Lupe to review.",
-          input_schema: {
-            type: "object",
-            additionalProperties: false,
-            required: [
-              "title",
-              "slug",
-              "tags",
-              "meta_description",
-              "body_markdown",
-              "suggested_internal_links",
-            ],
-            properties: {
-              title: {
-                type: "string",
-                description: "Compelling SEO title for the blog post.",
-              },
-              slug: {
-                type: "string",
-                description: "URL slug, lowercase words separated by hyphens.",
-              },
-              tags: {
-                type: "array",
-                items: { type: "string" },
-              },
-              meta_description: {
-                type: "string",
-                description: "135-160 character meta description.",
-              },
-              body_markdown: {
-                type: "string",
-                description: "Full markdown blog post body.",
-              },
-              suggested_internal_links: {
-                type: "array",
-                items: {
+    const message = await client.messages.create(
+      {
+        model: getModel(),
+        max_tokens: 4096,
+        system: BLOG_SYSTEM_PROMPT,
+        messages: [
+          {
+            role: "user",
+            content: buildUserPrompt(topic.topic, recentPosts),
+          },
+        ],
+        tools: [
+          {
+            name: "save_blog_draft",
+            description:
+              "Save a structured Xelerate blog draft for Lupe to review.",
+            input_schema: {
+              type: "object",
+              additionalProperties: false,
+              required: [
+                "title",
+                "slug",
+                "tags",
+                "meta_description",
+                "body_markdown",
+                "suggested_internal_links",
+              ],
+              properties: {
+                title: {
                   type: "string",
-                  enum: ALLOWED_INTERNAL_LINKS,
+                  description: "Compelling SEO title for the blog post.",
+                },
+                slug: {
+                  type: "string",
+                  description: "URL slug, lowercase words separated by hyphens.",
+                },
+                tags: {
+                  type: "array",
+                  items: { type: "string" },
+                },
+                meta_description: {
+                  type: "string",
+                  description: "135-160 character meta description.",
+                },
+                body_markdown: {
+                  type: "string",
+                  description: "Full markdown blog post body.",
+                },
+                suggested_internal_links: {
+                  type: "array",
+                  items: {
+                    type: "string",
+                    enum: ALLOWED_INTERNAL_LINKS,
+                  },
                 },
               },
             },
           },
+        ],
+        tool_choice: {
+          type: "tool",
+          name: "save_blog_draft",
         },
-      ],
-      tool_choice: {
-        type: "tool",
-        name: "save_blog_draft",
       },
-    });
+      {
+        timeout: 45_000,
+      },
+    );
 
     const draft = extractToolInput(message);
     const postId = await createGeneratedDraft(topic.id, draft);

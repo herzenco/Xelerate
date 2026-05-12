@@ -36,6 +36,10 @@ Required for the admin portal:
 - `BLOG_MODEL`
 - `CRON_SECRET`
 
+Recommended local/testing model:
+
+- `BLOG_MODEL=claude-sonnet-4-5-20250929`
+
 Optional/reserved:
 
 - `UPSTASH_REDIS_REST_URL`

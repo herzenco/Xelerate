@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createDraftAction, generateClaudeDraftAction } from "./actions";
 import { listAdminPosts, listBlogTopics } from "@/lib/admin/content-store";
+import { SubmitButton } from "./submit-button";
 
 export const metadata: Metadata = {
   title: "Content",
@@ -44,12 +45,14 @@ export default async function AdminContentPage({
         </div>
         <div className="flex flex-wrap gap-2">
           <form action={generateClaudeDraftAction}>
-            <Button type="submit">Generate with Claude</Button>
+            <SubmitButton pendingLabel="Generating...">
+              Generate with Claude
+            </SubmitButton>
           </form>
           <form action={createDraftAction}>
-            <Button type="submit" variant="secondary">
+            <SubmitButton pendingLabel="Creating..." variant="secondary">
               Create placeholder
-            </Button>
+            </SubmitButton>
           </form>
           <Button asChild variant="outline">
             <Link href="/admin/content/topics">Topic seeds</Link>
