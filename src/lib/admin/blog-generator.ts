@@ -4,6 +4,8 @@ import { z } from "zod";
 import { getAnthropicClient } from "./anthropic";
 import {
   createGeneratedDraft,
+  getAdminPost,
+  getGeneratedPostIdForToday,
   getRecentPublishedPostContext,
   getNextActiveTopic,
   logGenerationError,
@@ -66,6 +68,25 @@ function extractToolInput(message: unknown): GeneratedDraft {
 }
 
 export async function generateBlogDraft() {
+  const existingPostId = await getGeneratedPostIdForToday();
+  if (existingPostId) {
+    const existingPost = await getAdminPost(existingPostId);
+
+    return {
+      postId: existingPostId,
+      draft: existingPost
+        ? {
+            title: existingPost.title,
+            slug: existingPost.slug,
+            tags: existingPost.tags,
+            meta_description: existingPost.metaDescription,
+            body_markdown: existingPost.bodyMarkdown,
+            suggested_internal_links: existingPost.suggestedInternalLinks,
+          }
+        : null,
+    };
+  }
+
   const topic = await getNextActiveTopic();
   const recentPosts = await getRecentPublishedPostContext();
 
@@ -140,7 +161,7 @@ export async function generateBlogDraft() {
         },
       },
       {
-        timeout: 45_000,
+        timeout: 120_000,
       },
     );
 
