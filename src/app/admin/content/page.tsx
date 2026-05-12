@@ -77,6 +77,7 @@ export default async function AdminContentPage({
                 <tr>
                   <th className="px-4 py-3 text-left font-medium">Title</th>
                   <th className="px-4 py-3 text-left font-medium">Status</th>
+                  <th className="px-4 py-3 text-left font-medium">Score</th>
                   <th className="px-4 py-3 text-left font-medium">Updated</th>
                   <th className="px-4 py-3 text-right font-medium">Action</th>
                 </tr>
@@ -98,6 +99,9 @@ export default async function AdminContentPage({
                       </Badge>
                     </td>
                     <td className="px-4 py-4 text-muted-foreground">
+                      {post.seoScore ? `${post.seoScore}/100` : "-"}
+                    </td>
+                    <td className="px-4 py-4 text-muted-foreground">
                       {new Date(post.updatedAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-4 text-right">
@@ -109,7 +113,7 @@ export default async function AdminContentPage({
                 ))}
                 {posts.length === 0 && (
                   <tr>
-                    <td className="px-4 py-6 text-muted-foreground" colSpan={4}>
+                    <td className="px-4 py-6 text-muted-foreground" colSpan={5}>
                       No drafts yet. Create one from an active topic seed.
                     </td>
                   </tr>

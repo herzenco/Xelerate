@@ -13,6 +13,7 @@ import {
   approvePostAction,
   publishPostAction,
   rejectPostAction,
+  revisePostAction,
   savePostAction,
   schedulePostAction,
 } from "../actions";
@@ -52,6 +53,7 @@ export default async function AdminDraftPage({
   }
 
   const noteError = searchParams?.error === "editors-note";
+  const revisionPromptError = searchParams?.error === "revision-prompt";
   const editorNoteLength = post.editorsNote.trim().length;
 
   return (
@@ -113,6 +115,12 @@ export default async function AdminDraftPage({
         </div>
       )}
 
+      {revisionPromptError && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          Tell Claude what to change before asking for a revision.
+        </div>
+      )}
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
           <Card>
@@ -123,6 +131,15 @@ export default async function AdminDraftPage({
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
                 <Input id="title" name="title" defaultValue={post.title} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="excerpt">Excerpt</Label>
+                <Textarea
+                  id="excerpt"
+                  name="excerpt"
+                  rows={2}
+                  defaultValue={post.excerpt}
+                />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
@@ -139,6 +156,29 @@ export default async function AdminDraftPage({
                   />
                 </div>
               </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="seoTitle">SEO title</Label>
+                  <Input id="seoTitle" name="seoTitle" defaultValue={post.seoTitle} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="focusKeyword">Focus keyword</Label>
+                  <Input
+                    id="focusKeyword"
+                    name="focusKeyword"
+                    defaultValue={post.focusKeyword}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="secondaryKeywords">Secondary keywords</Label>
+                <Input
+                  id="secondaryKeywords"
+                  name="secondaryKeywords"
+                  defaultValue={post.secondaryKeywords.join(", ")}
+                  placeholder="fractional product leadership, startup roadmap"
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="metaDescription">Meta description</Label>
                 <Textarea
@@ -147,6 +187,21 @@ export default async function AdminDraftPage({
                   rows={3}
                   defaultValue={post.metaDescription}
                 />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="ogTitle">OG title</Label>
+                  <Input id="ogTitle" name="ogTitle" defaultValue={post.ogTitle} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ogDescription">OG description</Label>
+                  <Textarea
+                    id="ogDescription"
+                    name="ogDescription"
+                    rows={2}
+                    defaultValue={post.ogDescription}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -169,6 +224,43 @@ export default async function AdminDraftPage({
         <aside className="space-y-6">
           <Card>
             <CardHeader>
+              <CardTitle className="text-base">Content scorecard</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-md border border-border p-3">
+                  <div className="text-2xl font-semibold">{post.seoScore || "-"}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">SEO</div>
+                </div>
+                <div className="rounded-md border border-border p-3">
+                  <div className="text-2xl font-semibold">
+                    {post.readabilityScore || "-"}
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">Readability</div>
+                </div>
+                <div className="rounded-md border border-border p-3">
+                  <div className="text-2xl font-semibold">
+                    {post.readingTime ?? "-"}
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">Minutes</div>
+                </div>
+              </div>
+              <div className="space-y-1 text-sm">
+                <p className="font-medium">Topic reasoning</p>
+                <p className="text-muted-foreground">
+                  {post.topicReasoning || "No strategy note saved yet."}
+                </p>
+              </div>
+              {post.keywordDensity > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Keyword density: {(post.keywordDensity / 10).toFixed(1)}%
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle className="text-base">Editor's note</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -181,6 +273,22 @@ export default async function AdminDraftPage({
               <p className="text-xs text-muted-foreground">
                 Current saved length: {editorNoteLength}/50 characters minimum.
               </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Re-prompt Claude</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Textarea
+                name="revisionPrompt"
+                rows={4}
+                placeholder="Make this more tactical, add stronger examples, tighten the intro..."
+              />
+              <Button type="submit" className="w-full" formAction={revisePostAction}>
+                Revise draft
+              </Button>
             </CardContent>
           </Card>
 

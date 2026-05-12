@@ -7,6 +7,7 @@ import { and, asc, desc, eq, lte } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   adminAuditLog,
+  blogPostRevisions,
   blogPosts,
   blogTopics,
   generationErrors,
@@ -25,8 +26,23 @@ export interface AdminBlogPost {
   title: string;
   slug: string;
   tags: string[];
+  contentType: string;
+  category: string;
+  excerpt: string;
   metaDescription: string;
   bodyMarkdown: string;
+  coverImageUrl: string | null;
+  readingTime: number | null;
+  seoTitle: string;
+  focusKeyword: string;
+  secondaryKeywords: string[];
+  keywordDensity: number;
+  readabilityScore: number;
+  seoScore: number;
+  topicReasoning: string;
+  ogTitle: string;
+  ogDescription: string;
+  schemaMarkup: Record<string, unknown>;
   editorsNote: string;
   status: BlogPostStatus;
   publishAt: string | null;
@@ -68,6 +84,13 @@ interface ContentStore {
     id: string;
     error: string;
     payload: Record<string, unknown>;
+    createdAt: string;
+  }>;
+  revisions?: Array<{
+    id: string;
+    postId: string;
+    bodyMarkdown: string;
+    promptUsed: string | null;
     createdAt: string;
   }>;
 }
@@ -120,8 +143,23 @@ function rowToPost(row: typeof blogPosts.$inferSelect): AdminBlogPost {
     title: row.title,
     slug: row.slug,
     tags: row.tags,
+    contentType: row.contentType,
+    category: row.category,
+    excerpt: row.excerpt ?? "",
     metaDescription: row.metaDescription,
     bodyMarkdown: row.bodyMarkdown,
+    coverImageUrl: row.coverImageUrl,
+    readingTime: row.readingTime,
+    seoTitle: row.seoTitle ?? row.title,
+    focusKeyword: row.focusKeyword ?? "",
+    secondaryKeywords: row.secondaryKeywords,
+    keywordDensity: row.keywordDensity,
+    readabilityScore: row.readabilityScore,
+    seoScore: row.seoScore,
+    topicReasoning: row.topicReasoning ?? "",
+    ogTitle: row.ogTitle ?? row.title,
+    ogDescription: row.ogDescription ?? row.metaDescription,
+    schemaMarkup: row.schemaMarkup,
     editorsNote: row.editorsNote ?? "",
     status: row.status,
     publishAt: toIso(row.publishAt),
@@ -133,6 +171,32 @@ function rowToPost(row: typeof blogPosts.$inferSelect): AdminBlogPost {
     createdAt: toIso(row.createdAt) ?? now(),
     updatedAt: toIso(row.updatedAt) ?? now(),
   };
+}
+
+function normalizePost(post: AdminBlogPost): AdminBlogPost {
+  return {
+    ...post,
+    contentType: post.contentType ?? "blog",
+    category: post.category ?? "product-leadership",
+    excerpt: post.excerpt ?? "",
+    coverImageUrl: post.coverImageUrl ?? null,
+    readingTime: post.readingTime ?? estimateReadingTime(post.bodyMarkdown ?? ""),
+    seoTitle: post.seoTitle ?? post.title,
+    focusKeyword: post.focusKeyword ?? "",
+    secondaryKeywords: post.secondaryKeywords ?? [],
+    keywordDensity: post.keywordDensity ?? 0,
+    readabilityScore: post.readabilityScore ?? 0,
+    seoScore: post.seoScore ?? 0,
+    topicReasoning: post.topicReasoning ?? "",
+    ogTitle: post.ogTitle ?? post.title,
+    ogDescription: post.ogDescription ?? post.metaDescription,
+    schemaMarkup: post.schemaMarkup ?? {},
+  };
+}
+
+function estimateReadingTime(markdown: string) {
+  const words = markdown.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / 200));
 }
 
 function rowToTopic(row: typeof blogTopics.$inferSelect): BlogTopic {
@@ -169,10 +233,28 @@ function defaultStore(): ContentStore {
         title: "How to Turn a Messy Backlog Into a Focused Product Roadmap",
         slug: "messy-backlog-focused-product-roadmap",
         tags: ["product roadmap", "startup operations", "fractional pm"],
+        contentType: "blog",
+        category: "product-leadership",
+        excerpt:
+          "A practical way for founders to turn scattered product ideas into a roadmap their team can execute.",
         metaDescription:
           "A practical guide for founders who need to turn scattered product ideas into a roadmap their team can actually execute.",
         bodyMarkdown:
           "# How to Turn a Messy Backlog Into a Focused Product Roadmap\n\nMost startup backlogs become a junk drawer because every idea feels urgent when there is no product operating system.\n\nA useful roadmap starts by separating signal from noise. Group requests by customer pain, business impact, implementation effort, and strategic fit. Then choose a small number of outcomes the team can actually move in the next 30 days.\n\nThe best roadmap is not a promise list. It is a decision-making artifact that helps the team say yes and no with confidence.\n\n## A Simple Reset Process\n\n1. Collect everything in one place.\n2. Remove duplicates and stale requests.\n3. Group work by customer problem.\n4. Score by impact, confidence, and effort.\n5. Commit to fewer priorities than feels comfortable.\n\nThat last step is where most teams get the leverage.",
+        coverImageUrl: null,
+        readingTime: 3,
+        seoTitle: "Turn a Messy Backlog Into a Focused Roadmap",
+        focusKeyword: "product roadmap",
+        secondaryKeywords: ["startup backlog", "fractional product leadership"],
+        keywordDensity: 0,
+        readabilityScore: 78,
+        seoScore: 80,
+        topicReasoning:
+          "Backlog clarity is a common founder pain and connects naturally to fractional product leadership.",
+        ogTitle: "Turn a Messy Backlog Into a Focused Roadmap",
+        ogDescription:
+          "A founder-friendly framework for turning scattered product ideas into a focused roadmap.",
+        schemaMarkup: {},
         editorsNote: "",
         status: "draft",
         publishAt: null,
@@ -266,7 +348,7 @@ export async function listAdminPosts() {
   }
 
   const store = await readStore();
-  return [...store.posts].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return [...store.posts].map(normalizePost).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
 export async function getAdminPost(id: string) {
@@ -280,7 +362,8 @@ export async function getAdminPost(id: string) {
   }
 
   const store = await readStore();
-  return store.posts.find((post) => post.id === id) ?? null;
+  const post = store.posts.find((item) => item.id === id);
+  return post ? normalizePost(post) : null;
 }
 
 export async function listBlogTopics() {
@@ -473,8 +556,16 @@ export async function createDraftFromTopic(topicId?: string) {
         title,
         slug: slugify(title),
         tags: ["fractional pm", "startup product"],
+        contentType: "blog",
+        category: "product-leadership",
+        excerpt: `A practical Xelerate draft on ${topic.toLowerCase()}.`,
         metaDescription: `A practical Xelerate draft on ${topic.toLowerCase()}.`,
         bodyMarkdown: `# ${title}\n\nThis is a working draft generated from the topic seed: **${topic}**.\n\n## Why this matters\n\nFounders often know the product needs more structure, but they do not always need a full-time product leader yet. This draft should explain the problem clearly, show practical product judgment, and connect the lesson back to Xelerate's fractional product leadership offer.\n\n## Draft direction\n\n- Start with the founder pain.\n- Explain the product operating principle.\n- Give a concrete framework Lupe can edit.\n- Add internal links only where they genuinely help the reader.\n\n## Editorial note for Lupe\n\nAdd at least one first-hand observation before approval so the post has a real human signal.`,
+        readingTime: 2,
+        seoTitle: title,
+        focusKeyword: "fractional product leadership",
+        secondaryKeywords: ["startup product", "product roadmap"],
+        topicReasoning: `Placeholder draft created from topic seed: ${topic}`,
         editorsNote: "",
         suggestedInternalLinks: ["/product-leadership", "/how-it-works", "/pricing"],
         generationDate: today(),
@@ -505,8 +596,23 @@ export async function createDraftFromTopic(topicId?: string) {
     title,
     slug: slugify(title),
     tags: ["fractional pm", "startup product"],
+    contentType: "blog",
+    category: "product-leadership",
+    excerpt: `A practical Xelerate draft on ${topic.toLowerCase()}.`,
     metaDescription: `A practical Xelerate draft on ${topic.toLowerCase()}.`,
     bodyMarkdown: `# ${title}\n\nThis is a working draft generated from the topic seed: **${topic}**.\n\n## Why this matters\n\nFounders often know the product needs more structure, but they do not always need a full-time product leader yet. This draft should explain the problem clearly, show practical product judgment, and connect the lesson back to Xelerate's fractional product leadership offer.\n\n## Draft direction\n\n- Start with the founder pain.\n- Explain the product operating principle.\n- Give a concrete framework Lupe can edit.\n- Add internal links only where they genuinely help the reader.\n\n## Editorial note for Lupe\n\nAdd at least one first-hand observation before approval so the post has a real human signal.`,
+    coverImageUrl: null,
+    readingTime: 2,
+    seoTitle: title,
+    focusKeyword: "fractional product leadership",
+    secondaryKeywords: ["startup product", "product roadmap"],
+    keywordDensity: 0,
+    readabilityScore: 0,
+    seoScore: 0,
+    topicReasoning: `Placeholder draft created from topic seed: ${topic}`,
+    ogTitle: title,
+    ogDescription: `A practical Xelerate draft on ${topic.toLowerCase()}.`,
+    schemaMarkup: {},
     editorsNote: "",
     status: "draft",
     publishAt: null,
@@ -531,13 +637,52 @@ export async function createGeneratedDraft(
     title: string;
     slug: string;
     tags: string[];
+    content_type?: string;
+    category?: string;
+    excerpt?: string;
     meta_description: string;
     body_markdown: string;
+    cover_image_url?: string | null;
+    reading_time?: number;
+    seo_title?: string;
+    focus_keyword?: string;
+    secondary_keywords?: string[];
+    keyword_density?: number;
+    readability_score?: number;
+    seo_score?: number;
+    topic_reasoning?: string;
+    og_title?: string;
+    og_description?: string;
+    schema_markup?: Record<string, unknown>;
     suggested_internal_links: string[];
   },
 ) {
   const existingPostId = await getGeneratedPostIdForToday();
-  if (existingPostId) return existingPostId;
+  if (existingPostId) {
+    await updateAdminPost(existingPostId, {
+      title: draft.title.trim(),
+      slug: slugify(draft.slug || draft.title),
+      tags: draft.tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean),
+      contentType: draft.content_type ?? "blog",
+      category: draft.category ?? "product-leadership",
+      excerpt: draft.excerpt?.trim() ?? "",
+      metaDescription: draft.meta_description.trim(),
+      bodyMarkdown: draft.body_markdown.trim(),
+      coverImageUrl: draft.cover_image_url ?? null,
+      readingTime: draft.reading_time ?? estimateReadingTime(draft.body_markdown),
+      seoTitle: draft.seo_title?.trim() || draft.title.trim(),
+      focusKeyword: draft.focus_keyword?.trim() ?? "",
+      secondaryKeywords: draft.secondary_keywords ?? [],
+      keywordDensity: draft.keyword_density ?? 0,
+      readabilityScore: draft.readability_score ?? 0,
+      seoScore: draft.seo_score ?? 0,
+      topicReasoning: draft.topic_reasoning ?? "",
+      ogTitle: draft.og_title?.trim() || draft.title.trim(),
+      ogDescription: draft.og_description?.trim() || draft.meta_description.trim(),
+      schemaMarkup: draft.schema_markup ?? {},
+    });
+    return existingPostId;
+  }
 
   if (hasDatabase()) {
     const timestamp = new Date();
@@ -552,8 +697,23 @@ export async function createGeneratedDraft(
         title: draft.title.trim(),
         slug: slugify(draft.slug || draft.title),
         tags: draft.tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean),
+        contentType: draft.content_type ?? "blog",
+        category: draft.category ?? "product-leadership",
+        excerpt: draft.excerpt?.trim() ?? "",
         metaDescription: draft.meta_description.trim(),
         bodyMarkdown: draft.body_markdown.trim(),
+        coverImageUrl: draft.cover_image_url ?? null,
+        readingTime: draft.reading_time ?? estimateReadingTime(draft.body_markdown),
+        seoTitle: draft.seo_title?.trim() || draft.title.trim(),
+        focusKeyword: draft.focus_keyword?.trim() ?? "",
+        secondaryKeywords: draft.secondary_keywords ?? [],
+        keywordDensity: draft.keyword_density ?? 0,
+        readabilityScore: draft.readability_score ?? 0,
+        seoScore: draft.seo_score ?? 0,
+        topicReasoning: draft.topic_reasoning ?? "",
+        ogTitle: draft.og_title?.trim() || draft.title.trim(),
+        ogDescription: draft.og_description?.trim() || draft.meta_description.trim(),
+        schemaMarkup: draft.schema_markup ?? {},
         editorsNote: "",
         suggestedInternalLinks: draft.suggested_internal_links,
         hasXyrenLink: detectXyrenLink(draft.body_markdown),
@@ -579,8 +739,23 @@ export async function createGeneratedDraft(
     title: draft.title.trim(),
     slug: slugify(draft.slug || draft.title),
     tags: draft.tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean),
+    contentType: draft.content_type ?? "blog",
+    category: draft.category ?? "product-leadership",
+    excerpt: draft.excerpt?.trim() ?? "",
     metaDescription: draft.meta_description.trim(),
     bodyMarkdown: draft.body_markdown.trim(),
+    coverImageUrl: draft.cover_image_url ?? null,
+    readingTime: draft.reading_time ?? estimateReadingTime(draft.body_markdown),
+    seoTitle: draft.seo_title?.trim() || draft.title.trim(),
+    focusKeyword: draft.focus_keyword?.trim() ?? "",
+    secondaryKeywords: draft.secondary_keywords ?? [],
+    keywordDensity: draft.keyword_density ?? 0,
+    readabilityScore: draft.readability_score ?? 0,
+    seoScore: draft.seo_score ?? 0,
+    topicReasoning: draft.topic_reasoning ?? "",
+    ogTitle: draft.og_title?.trim() || draft.title.trim(),
+    ogDescription: draft.og_description?.trim() || draft.meta_description.trim(),
+    schemaMarkup: draft.schema_markup ?? {},
     editorsNote: "",
     status: "draft",
     publishAt: null,
@@ -637,8 +812,23 @@ export async function updateAdminPost(
       | "title"
       | "slug"
       | "tags"
+      | "contentType"
+      | "category"
+      | "excerpt"
       | "metaDescription"
       | "bodyMarkdown"
+      | "coverImageUrl"
+      | "readingTime"
+      | "seoTitle"
+      | "focusKeyword"
+      | "secondaryKeywords"
+      | "keywordDensity"
+      | "readabilityScore"
+      | "seoScore"
+      | "topicReasoning"
+      | "ogTitle"
+      | "ogDescription"
+      | "schemaMarkup"
       | "editorsNote"
       | "publishAt"
       | "rejectionReason"
@@ -650,8 +840,23 @@ export async function updateAdminPost(
       title: updates.title,
       slug: updates.slug ? slugify(updates.slug) : undefined,
       tags: updates.tags,
+      contentType: updates.contentType,
+      category: updates.category,
+      excerpt: updates.excerpt,
       metaDescription: updates.metaDescription,
       bodyMarkdown: updates.bodyMarkdown,
+      coverImageUrl: updates.coverImageUrl,
+      readingTime: updates.readingTime,
+      seoTitle: updates.seoTitle,
+      focusKeyword: updates.focusKeyword,
+      secondaryKeywords: updates.secondaryKeywords,
+      keywordDensity: updates.keywordDensity,
+      readabilityScore: updates.readabilityScore,
+      seoScore: updates.seoScore,
+      topicReasoning: updates.topicReasoning,
+      ogTitle: updates.ogTitle,
+      ogDescription: updates.ogDescription,
+      schemaMarkup: updates.schemaMarkup,
       editorsNote: updates.editorsNote,
       publishAt: updates.publishAt ? new Date(updates.publishAt) : undefined,
       rejectionReason: updates.rejectionReason,
@@ -764,4 +969,50 @@ export async function publishDueScheduledPosts() {
 
   if (count > 0) await writeStore(store);
   return count;
+}
+
+export async function reviseAdminPostBody(
+  postId: string,
+  revisedMarkdown: string,
+  promptUsed: string,
+) {
+  if (hasDatabase()) {
+    const post = await getAdminPost(postId);
+    if (!post) return null;
+
+    await getDb().insert(blogPostRevisions).values({
+      postId,
+      bodyMarkdown: post.bodyMarkdown,
+      promptUsed,
+    });
+
+    await updateAdminPost(postId, {
+      bodyMarkdown: revisedMarkdown,
+      readingTime: estimateReadingTime(revisedMarkdown),
+    } as Partial<AdminBlogPost>);
+    await auditDb("post.revise.claude", "blog_post", postId);
+    return postId;
+  }
+
+  const store = await readStore();
+  const post = store.posts.find((item) => item.id === postId);
+  if (!post) return null;
+
+  store.revisions = store.revisions ?? [];
+  store.revisions.unshift({
+    id: randomUUID(),
+    postId,
+    bodyMarkdown: post.bodyMarkdown,
+    promptUsed,
+    createdAt: now(),
+  });
+  store.revisions = store.revisions.slice(0, 100);
+
+  post.bodyMarkdown = revisedMarkdown;
+  post.readingTime = estimateReadingTime(revisedMarkdown);
+  post.updatedAt = now();
+
+  await auditLocal(store, "post.revise.claude", "blog_post", postId);
+  await writeStore(store);
+  return postId;
 }
