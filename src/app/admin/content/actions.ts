@@ -10,6 +10,7 @@ import {
   updateAdminPost,
 } from "@/lib/admin/content-store";
 import { generateBlogDraft } from "@/lib/admin/blog-generator";
+import { reviseBlogDraft } from "@/lib/admin/blog-generator";
 import { assertAdmin } from "@/lib/admin/auth";
 
 function splitTags(value: FormDataEntryValue | null) {
@@ -77,8 +78,14 @@ export async function savePostAction(formData: FormData) {
     title: String(formData.get("title") ?? "").trim(),
     slug: normalizeSlug(String(formData.get("slug") ?? "")),
     tags: splitTags(formData.get("tags")),
+    excerpt: String(formData.get("excerpt") ?? "").trim(),
     metaDescription: String(formData.get("metaDescription") ?? "").trim(),
     bodyMarkdown: String(formData.get("bodyMarkdown") ?? ""),
+    seoTitle: String(formData.get("seoTitle") ?? "").trim(),
+    focusKeyword: String(formData.get("focusKeyword") ?? "").trim(),
+    secondaryKeywords: splitTags(formData.get("secondaryKeywords")),
+    ogTitle: String(formData.get("ogTitle") ?? "").trim(),
+    ogDescription: String(formData.get("ogDescription") ?? "").trim(),
     editorsNote: String(formData.get("editorsNote") ?? "").trim(),
   });
 
@@ -144,6 +151,21 @@ export async function rejectPostAction(formData: FormData) {
     rejectionReason: String(formData.get("rejectionReason") ?? "").trim(),
   });
   await setPostStatus(postId, "rejected");
+  revalidatePath("/admin/content");
+  redirect(`/admin/content/${postId}`);
+}
+
+export async function revisePostAction(formData: FormData) {
+  await assertAdmin();
+  const postId = String(formData.get("postId") ?? "");
+  const revisionPrompt = String(formData.get("revisionPrompt") ?? "").trim();
+
+  if (revisionPrompt.length < 10) {
+    redirect(`/admin/content/${postId}?error=revision-prompt`);
+  }
+
+  await savePostAction(formData);
+  await reviseBlogDraft(postId, revisionPrompt);
   revalidatePath("/admin/content");
   redirect(`/admin/content/${postId}`);
 }

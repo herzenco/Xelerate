@@ -88,8 +88,29 @@ export const blogPosts = pgTable(
       .array()
       .notNull()
       .default(sql`ARRAY[]::text[]`),
+    contentType: text("content_type").notNull().default("blog"),
+    category: text("category").notNull().default("product-leadership"),
+    excerpt: text("excerpt"),
     metaDescription: text("meta_description").notNull(),
     bodyMarkdown: text("body_markdown").notNull().default(""),
+    coverImageUrl: text("cover_image_url"),
+    readingTime: integer("reading_time"),
+    seoTitle: text("seo_title"),
+    focusKeyword: text("focus_keyword"),
+    secondaryKeywords: text("secondary_keywords")
+      .array()
+      .notNull()
+      .default(sql`ARRAY[]::text[]`),
+    keywordDensity: integer("keyword_density").notNull().default(0),
+    readabilityScore: integer("readability_score").notNull().default(0),
+    seoScore: integer("seo_score").notNull().default(0),
+    topicReasoning: text("topic_reasoning"),
+    ogTitle: text("og_title"),
+    ogDescription: text("og_description"),
+    schemaMarkup: jsonb("schema_markup")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     editorsNote: text("editors_note"),
     status: blogPostStatus("status").notNull().default("draft"),
     publishAt: timestamp("publish_at", { withTimezone: true }),

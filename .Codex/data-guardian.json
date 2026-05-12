@@ -1,0 +1,25 @@
+{
+  "project_name": "xelerate.me-front",
+  "databases": [
+    {
+      "name": "main_postgres",
+      "type": "postgres",
+      "connection_env": "DATABASE_URL",
+      "critical_tables": [
+        "blog_posts",
+        "blog_post_revisions",
+        "blog_topics",
+        "generation_errors",
+        "admin_audit_log",
+        "auth_user",
+        "auth_session",
+        "auth_account",
+        "auth_verification_token",
+        "admin_magic_link_requests"
+      ],
+      "always_backup": true
+    }
+  ],
+  "protected_branches": ["main", "production"],
+  "risk_level": "normal"
+}
