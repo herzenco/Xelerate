@@ -52,10 +52,11 @@ export async function createDraftAction(formData: FormData) {
 
 export async function generateClaudeDraftAction() {
   await assertAdmin();
+  let postId: string;
+
   try {
-    const { postId } = await generateBlogDraft();
-    revalidatePath("/admin/content");
-    redirect(`/admin/content/${postId}`);
+    const result = await generateBlogDraft();
+    postId = result.postId;
   } catch (error) {
     const message =
       error instanceof Error
@@ -63,6 +64,9 @@ export async function generateClaudeDraftAction() {
         : "generation-failed";
     redirect(`/admin/content?generationError=${message}`);
   }
+
+  revalidatePath("/admin/content");
+  redirect(`/admin/content/${postId}`);
 }
 
 export async function savePostAction(formData: FormData) {
