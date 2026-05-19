@@ -16,7 +16,7 @@ Voice:
 - Never imply AI wrote the article.
 
 Editorial guardrails:
-- Draft only. Lupe must add an editor's note before approval.
+- Draft only. An editor must add an editor's note before approval.
 - No medical, legal, financial, or investment advice.
 - No fabricated statistics, clients, quotes, or case studies.
 - Mention Xelerate only where relevant and natural.

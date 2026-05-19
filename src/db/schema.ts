@@ -205,28 +205,6 @@ export const adminAuditLog = pgTable(
   }),
 );
 
-export const adminMagicLinkRequests = pgTable(
-  "admin_magic_link_requests",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    email: text("email").notNull(),
-    tokenHash: text("token_hash").notNull(),
-    ip: text("ip").notNull(),
-    ua: text("ua").notNull(),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    usedAt: timestamp("used_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (request) => ({
-    tokenHashIdx: uniqueIndex("admin_magic_link_requests_token_hash_idx").on(
-      request.tokenHash,
-    ),
-    emailIdx: index("admin_magic_link_requests_email_idx").on(request.email),
-  }),
-);
-
 export const approvedAnchorPhrases = pgTable("approved_anchor_phrases", {
   id: uuid("id").primaryKey().defaultRandom(),
   phrase: text("phrase").notNull().unique(),

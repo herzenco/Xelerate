@@ -134,7 +134,7 @@ function detectXyrenLink(markdown: string) {
 }
 
 function actorEmail() {
-  return process.env.ADMIN_EMAIL_ALLOWLIST?.split(",")[0]?.trim() || "lupe@xelerate.me";
+  return "admin@xelerate.me";
 }
 
 function rowToPost(row: typeof blogPosts.$inferSelect): AdminBlogPost {
@@ -560,7 +560,7 @@ export async function createDraftFromTopic(topicId?: string) {
         category: "product-leadership",
         excerpt: `A practical Xelerate draft on ${topic.toLowerCase()}.`,
         metaDescription: `A practical Xelerate draft on ${topic.toLowerCase()}.`,
-        bodyMarkdown: `# ${title}\n\nThis is a working draft generated from the topic seed: **${topic}**.\n\n## Why this matters\n\nFounders often know the product needs more structure, but they do not always need a full-time product leader yet. This draft should explain the problem clearly, show practical product judgment, and connect the lesson back to Xelerate's fractional product leadership offer.\n\n## Draft direction\n\n- Start with the founder pain.\n- Explain the product operating principle.\n- Give a concrete framework Lupe can edit.\n- Add internal links only where they genuinely help the reader.\n\n## Editorial note for Lupe\n\nAdd at least one first-hand observation before approval so the post has a real human signal.`,
+        bodyMarkdown: `# ${title}\n\nThis is a working draft generated from the topic seed: **${topic}**.\n\n## Why this matters\n\nFounders often know the product needs more structure, but they do not always need a full-time product leader yet. This draft should explain the problem clearly, show practical product judgment, and connect the lesson back to Xelerate's fractional product leadership offer.\n\n## Draft direction\n\n- Start with the founder pain.\n- Explain the product operating principle.\n- Give a concrete framework an editor can revise.\n- Add internal links only where they genuinely help the reader.\n\n## Editorial note\n\nAdd at least one first-hand observation before approval so the post has a real human signal.`,
         readingTime: 2,
         seoTitle: title,
         focusKeyword: "fractional product leadership",
@@ -600,7 +600,7 @@ export async function createDraftFromTopic(topicId?: string) {
     category: "product-leadership",
     excerpt: `A practical Xelerate draft on ${topic.toLowerCase()}.`,
     metaDescription: `A practical Xelerate draft on ${topic.toLowerCase()}.`,
-    bodyMarkdown: `# ${title}\n\nThis is a working draft generated from the topic seed: **${topic}**.\n\n## Why this matters\n\nFounders often know the product needs more structure, but they do not always need a full-time product leader yet. This draft should explain the problem clearly, show practical product judgment, and connect the lesson back to Xelerate's fractional product leadership offer.\n\n## Draft direction\n\n- Start with the founder pain.\n- Explain the product operating principle.\n- Give a concrete framework Lupe can edit.\n- Add internal links only where they genuinely help the reader.\n\n## Editorial note for Lupe\n\nAdd at least one first-hand observation before approval so the post has a real human signal.`,
+    bodyMarkdown: `# ${title}\n\nThis is a working draft generated from the topic seed: **${topic}**.\n\n## Why this matters\n\nFounders often know the product needs more structure, but they do not always need a full-time product leader yet. This draft should explain the problem clearly, show practical product judgment, and connect the lesson back to Xelerate's fractional product leadership offer.\n\n## Draft direction\n\n- Start with the founder pain.\n- Explain the product operating principle.\n- Give a concrete framework an editor can revise.\n- Add internal links only where they genuinely help the reader.\n\n## Editorial note\n\nAdd at least one first-hand observation before approval so the post has a real human signal.`,
     coverImageUrl: null,
     readingTime: 2,
     seoTitle: title,

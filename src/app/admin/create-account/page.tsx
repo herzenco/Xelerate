@@ -1,47 +1,41 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { KeyRound } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { requestPasswordSignInAction } from "./actions";
+import { createAdminAccountAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Sign in",
+  title: "Create account",
 };
 
-export default function AdminSignInPage({
+export default function AdminCreateAccountPage({
   searchParams,
 }: {
-  searchParams?: { created?: string; error?: string };
+  searchParams?: { error?: string };
 }) {
-  const created = searchParams?.created === "1";
-  const hasError = searchParams?.error === "1";
+  const error = searchParams?.error;
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md items-center">
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">
-            <KeyRound className="h-5 w-5" aria-hidden="true" />
-            Admin sign in
+            <UserPlus className="h-5 w-5" aria-hidden="true" />
+            Create admin account
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {hasError && (
+          {error && (
             <p className="mb-4 text-sm text-destructive">
-              The email or password is incorrect.
+              {decodeURIComponent(error)}
             </p>
           )}
-          {created && (
-            <p className="mb-4 text-sm text-muted-foreground">
-              Account created. Sign in with your email and password.
-            </p>
-          )}
-          <form action={requestPasswordSignInAction} className="space-y-4">
+          <form action={createAdminAccountAction} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -50,7 +44,7 @@ export default function AdminSignInPage({
                 type="email"
                 autoComplete="email"
                 required
-                placeholder="admin@xelerate.me"
+                placeholder="name@xelerate.me"
               />
             </div>
             <div className="space-y-2">
@@ -59,18 +53,19 @@ export default function AdminSignInPage({
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="new-password"
+                minLength={12}
                 required
               />
             </div>
             <Button type="submit" className="w-full">
-              Sign in
+              Create account
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Need an account?{" "}
-            <Link href="/admin/create-account" className="font-medium text-foreground underline-offset-4 hover:underline">
-              Create one
+            Already have an account?{" "}
+            <Link href="/admin/sign-in" className="font-medium text-foreground underline-offset-4 hover:underline">
+              Sign in
             </Link>
           </p>
         </CardContent>

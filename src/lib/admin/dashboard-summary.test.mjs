@@ -36,7 +36,7 @@ test("buildAdminDashboardSummary surfaces audit, visitor, and content highlights
     auditEvents: [
       {
         id: "audit-1",
-        actorEmail: "lupe@xelerate.me",
+        actorEmail: "admin@xelerate.me",
         action: "post.published",
         resourceType: "blog_post",
         resourceId: "post-1",
@@ -46,7 +46,7 @@ test("buildAdminDashboardSummary surfaces audit, visitor, and content highlights
       },
       {
         id: "audit-2",
-        actorEmail: "lupe@xelerate.me",
+        actorEmail: "admin@xelerate.me",
         action: "draft.create",
         resourceType: "blog_post",
         resourceId: "post-2",

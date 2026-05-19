@@ -1,30 +1,12 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createClient } from "@/utils/supabase/server";
 
 export async function GET(request: Request) {
   const signInUrl = new URL("/admin/sign-in", request.url);
-  const response = NextResponse.redirect(signInUrl);
+  const supabase = createClient(cookies());
 
-  const authCookieNames = new Set([
-    "authjs.session-token",
-    "__Secure-authjs.session-token",
-    "authjs.callback-url",
-    "__Secure-authjs.callback-url",
-    "authjs.csrf-token",
-    "__Host-authjs.csrf-token",
-  ]);
+  await supabase.auth.signOut();
 
-  const requestCookies = request.headers.get("cookie") ?? "";
-  for (const cookie of requestCookies.split(";")) {
-    const name = cookie.split("=")[0]?.trim();
-    if (
-      name &&
-      (authCookieNames.has(name) ||
-        name.startsWith("authjs.session-token.") ||
-        name.startsWith("__Secure-authjs.session-token."))
-    ) {
-      response.cookies.delete(name);
-    }
-  }
-
-  return response;
+  return NextResponse.redirect(signInUrl);
 }

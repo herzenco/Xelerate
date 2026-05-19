@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { createServerClient } from "@supabase/ssr";
+import { isXelerateAdminEmail } from "@/lib/admin/account-rules";
 import { updateSession } from "@/utils/supabase/middleware";
 
-const publicAdminPaths = ["/admin/sign-in", "/admin/sign-out"];
+const publicAdminPaths = ["/admin/sign-in", "/admin/create-account", "/admin/sign-out"];
 
 function isPublicAdminPath(pathname: string) {
   return publicAdminPaths.some(
@@ -20,52 +21,6 @@ function redirectToAdminSignIn(request: NextRequest) {
   return NextResponse.redirect(signInUrl);
 }
 
-function isAllowlisted(email?: string | null) {
-  if (!email) return false;
-  return (process.env.ADMIN_EMAIL_ALLOWLIST ?? "")
-    .split(",")
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean)
-    .includes(email.toLowerCase());
-}
-
-function isAdminAuthConfigured() {
-  return Boolean(
-    process.env.AUTH_SECRET &&
-      process.env.AUTH_URL &&
-      process.env.RESEND_API_KEY &&
-      process.env.DATABASE_URL &&
-      (process.env.ADMIN_EMAIL_ALLOWLIST ?? "").trim(),
-  );
-}
-
-async function getAuthEmail(request: NextRequest) {
-  if (!process.env.AUTH_SECRET) return null;
-
-  const secureCookie =
-    process.env.AUTH_URL?.startsWith("https://") ??
-    process.env.NODE_ENV === "production";
-
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-    secureCookie,
-  });
-
-  if (typeof token?.email === "string") return token.email;
-
-  if (secureCookie) {
-    const localToken = await getToken({
-      req: request,
-      secret: process.env.AUTH_SECRET,
-      secureCookie: false,
-    });
-    if (typeof localToken?.email === "string") return localToken.email;
-  }
-
-  return null;
-}
-
 export default async function middleware(request: NextRequest) {
   const supabaseResponse = await updateSession(request);
   const pathname = request.nextUrl.pathname;
@@ -76,19 +31,35 @@ export default async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  if (process.env.NODE_ENV === "development" && !isAdminAuthConfigured()) {
-    return supabaseResponse;
-  }
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const email = await getAuthEmail(request);
-  if (!email) {
+  if (!supabaseUrl || !supabaseKey) {
     return redirectToAdminSignIn(request);
   }
 
-  const isAdmin = isAllowlisted(email);
-  if (isAdmin) return supabaseResponse;
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          supabaseResponse.cookies.set(name, value, options);
+        });
+      },
+    },
+  });
 
-  return new NextResponse(null, { status: 404 });
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !isXelerateAdminEmail(data.user?.email)) {
+    return redirectToAdminSignIn(request);
+  }
+
+  return supabaseResponse;
 }
 
 export const config = {

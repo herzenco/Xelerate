@@ -107,7 +107,7 @@ export default async function AdminPage() {
               {formatMetric(summary.visitors.visitorsToday)}
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              Awaiting Lupe analytics API.
+              Awaiting analytics API.
             </p>
           </CardContent>
         </Card>

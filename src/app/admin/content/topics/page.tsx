@@ -20,7 +20,7 @@ export default async function AdminTopicsPage() {
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Topic Seeds</h1>
         <p className="mt-3 max-w-2xl text-muted-foreground">
-          Lupe will manage active blog topic seeds here. Least-recently-used
+          Manage active blog topic seeds here. Least-recently-used
           selection and tag guardrails are part of the generation pipeline.
         </p>
       </div>

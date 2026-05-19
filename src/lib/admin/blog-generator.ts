@@ -86,7 +86,7 @@ Use the Xyren-style content engine standard:
 - Include an excerpt, SEO title, Open Graph title/description, and Article schema markup.
 - Write for a founder/operator, not a generic marketing audience.
 - Include a practical framework, not a fluffy thought piece.
-- Return a draft that Lupe can edit, annotate, and approve.
+- Return a draft that an editor can edit, annotate, and approve.
 `.trim();
 }
 
@@ -278,7 +278,7 @@ export async function generateBlogDraft() {
           {
             name: "save_blog_draft",
             description:
-              "Save a structured Xelerate blog draft for Lupe to review.",
+              "Save a structured Xelerate blog draft for editorial review.",
             input_schema: draftToolSchema as any,
           },
         ],
@@ -328,14 +328,14 @@ export async function reviseBlogDraft(postId: string, requestedChanges: string) 
         {
           role: "user",
           content: `
-You are a content editor for Xelerate. Revise the draft using Lupe's instructions.
+You are a content editor for Xelerate. Revise the draft using the editor's instructions.
 
 Title: ${post.title}
 
 Current markdown:
 ${post.bodyMarkdown}
 
-Lupe's requested changes:
+Requested changes:
 ${requestedChanges.slice(0, 2000)}
 
 Return ONLY the revised markdown. Do not include commentary.

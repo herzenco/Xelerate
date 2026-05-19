@@ -1,21 +1,27 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { signIn } from "@/auth";
-import { isAdminAuthConfigured, isAdminEmail } from "@/lib/admin/auth";
+import { isXelerateAdminEmail, normalizeAdminEmail } from "@/lib/admin/account-rules";
+import { createClient } from "@/utils/supabase/server";
 
-export async function requestMagicLinkAction(formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+export async function requestPasswordSignInAction(formData: FormData) {
+  const email = normalizeAdminEmail(String(formData.get("email") ?? ""));
+  const password = String(formData.get("password") ?? "");
 
-  if (!isAdminAuthConfigured() || !isAdminEmail(email)) {
-    redirect("/admin/sign-in?sent=1");
+  if (!isXelerateAdminEmail(email)) {
+    redirect("/admin/sign-in?error=1");
   }
 
-  await signIn("resend", {
+  const supabase = createClient(cookies());
+  const { error } = await supabase.auth.signInWithPassword({
     email,
-    redirect: false,
-    redirectTo: "/admin",
+    password,
   });
 
-  redirect("/admin/sign-in?sent=1");
+  if (error) {
+    redirect("/admin/sign-in?error=1");
+  }
+
+  redirect("/admin");
 }

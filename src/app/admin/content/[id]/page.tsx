@@ -77,7 +77,7 @@ export default async function AdminDraftPage({
             </Badge>
           </div>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            Edit the generated draft, add Lupe's editor note, then approve,
+            Edit the generated draft, add an editor note, then approve,
             schedule, publish, or reject it.
           </p>
         </div>
@@ -268,7 +268,7 @@ export default async function AdminDraftPage({
                 name="editorsNote"
                 rows={6}
                 defaultValue={post.editorsNote}
-                placeholder="Add Lupe's first-hand observation before approval..."
+                placeholder="Add a first-hand observation before approval..."
               />
               <p className="text-xs text-muted-foreground">
                 Current saved length: {editorNoteLength}/50 characters minimum.
