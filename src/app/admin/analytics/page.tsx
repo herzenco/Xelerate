@@ -78,8 +78,8 @@ export default function AdminAnalyticsPage() {
           </div>
           <p className="mt-3 max-w-2xl text-muted-foreground">
             Vercel Web Analytics and Speed Insights are installed on every
-            public page. Admin routes are intentionally excluded so Lupe's
-            review sessions do not pollute public-site traffic.
+            public page. Admin routes are intentionally excluded so review
+            sessions do not pollute public-site traffic.
           </p>
         </div>
 
@@ -137,7 +137,7 @@ export default function AdminAnalyticsPage() {
               <p className="mt-2 text-sm text-muted-foreground">
                 Vercel currently exposes Web Analytics through its dashboard,
                 not a public metrics API for custom dashboards. This page acts
-                as Lupe's control panel and deep-link hub until Vercel exposes
+                as the admin control panel and deep-link hub until Vercel exposes
                 analytics data programmatically or we add a secondary analytics
                 provider with an API.
               </p>

@@ -17,7 +17,7 @@ Open `http://localhost:3000` or the port printed by Next.js.
 - React 18 + TypeScript
 - Tailwind CSS + shadcn/ui
 - Drizzle ORM + Neon Postgres for the admin/content database
-- Auth.js v5 magic-link auth for the admin portal
+- Database-backed email/password auth for the admin portal
 - Anthropic Claude for blog draft generation
 
 ## Environment Variables
@@ -26,11 +26,6 @@ Copy `.env.example` to `.env.local` and fill the values.
 
 Required for the admin portal:
 
-- `AUTH_SECRET`
-- `AUTH_URL`
-- `RESEND_API_KEY`
-- `RESEND_FROM_EMAIL`
-- `ADMIN_EMAIL_ALLOWLIST`
 - `DATABASE_URL`
 - `ANTHROPIC_API_KEY`
 - `BLOG_MODEL`
@@ -60,21 +55,6 @@ Rotate these secrets at least every 6 months, and immediately after any suspecte
 4. Run a test draft generation.
 5. Revoke the old key.
 
-### `RESEND_API_KEY`
-
-1. Create a new sending key in Resend.
-2. Update the Vercel environment variable.
-3. Redeploy.
-4. Send a test magic-link email.
-5. Revoke the old key.
-
-### `AUTH_SECRET`
-
-1. Generate a new high-entropy value.
-2. Update the Vercel environment variable.
-3. Redeploy.
-4. Expect all existing admin sessions and magic links to become invalid.
-
 ## Database
 
 Schema lives in `src/db/schema.ts`.
@@ -102,11 +82,6 @@ The first migration enables `pgvector` and `pgcrypto`.
 Production requires these Vercel environment variables:
 
 - `DATABASE_URL`
-- `AUTH_SECRET`
-- `AUTH_URL`
-- `RESEND_API_KEY`
-- `RESEND_FROM_EMAIL`
-- `ADMIN_EMAIL_ALLOWLIST`
 - `ANTHROPIC_API_KEY`
 - `BLOG_MODEL`
 - `CRON_SECRET`

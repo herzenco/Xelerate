@@ -120,7 +120,7 @@ Xelerate (xelerate.me) is a fractional product management consultancy website. I
 - [ ] Consider MDX or headless CMS for blog (current file-based approach works but won't scale past ~20 posts)
 - [ ] Add social profile URLs to Organization schema (LinkedIn, Twitter)
 - [ ] Replace img tags with next/image for logo
-- [ ] Wire Auth.js magic-link auth for admin/dashboard features
+- [ ] Wire database-backed email/password auth for admin/dashboard features
 - [ ] Run Lighthouse audit post-deploy (target 90+ on Performance and SEO)
 
 ## 🔐 Environment & Config Notes
@@ -154,11 +154,11 @@ Admin/content tables are scaffolded in `src/db/schema.ts` and migrations live in
 ### Session #3 — 2026-05-12
 **Agent:** Codex
 **Branch/Commit:** main / pending
-**Summary:** Removed remaining legacy database runtime dependencies and helper files before launch. Public site build passes. Admin portal remains scaffolded and intentionally hidden in production until Auth.js, Neon/Postgres persistence, and cron are production-ready.
+**Summary:** Removed remaining legacy database runtime dependencies and helper files before launch. Public site build passes. Admin portal remains scaffolded and intentionally hidden in production until database-backed auth, Neon/Postgres persistence, and cron are production-ready.
 **Files changed:** Legacy database packages removed from package manifest/lockfile, old database helper directory deleted, project memory updated.
 
 ### Session #4 — 2026-05-12
 **Agent:** Codex
 **Branch/Commit:** main / pending
-**Summary:** Upgraded the AI content generator toward deployment readiness: real Anthropic model ID, Auth.js/Resend magic-link admin auth, DB-backed content store with local fallback, Vercel cron endpoints for draft generation and scheduled publishing, and environment documentation.
+**Summary:** Upgraded the AI content generator toward deployment readiness: real Anthropic model ID, DB-backed admin auth, DB-backed content store with local fallback, Vercel cron endpoints for draft generation and scheduled publishing, and environment documentation.
 **Files changed:** `auth.ts`, `/admin/sign-in`, `/api/auth`, `/api/blog/*`, `src/lib/admin/content-store.ts`, Drizzle schema/migrations, `vercel.json`, docs/env.

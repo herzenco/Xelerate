@@ -1,10 +1,12 @@
-import { redirect } from "next/navigation";
-import { signOut } from "@/auth";
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createClient } from "@/utils/supabase/server";
 
-export async function GET() {
-  if (process.env.NODE_ENV === "development" && !process.env.AUTH_SECRET) {
-    redirect("/admin/sign-in");
-  }
+export async function GET(request: Request) {
+  const signInUrl = new URL("/admin/sign-in", request.url);
+  const supabase = createClient(cookies());
 
-  await signOut({ redirectTo: "/admin/sign-in" });
+  await supabase.auth.signOut();
+
+  return NextResponse.redirect(signInUrl);
 }

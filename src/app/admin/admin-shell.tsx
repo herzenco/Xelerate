@@ -15,10 +15,9 @@ const navItems = [
 
 interface AdminShellProps {
   children: React.ReactNode;
-  email?: string;
 }
 
-export function AdminShell({ children, email = "Lupe" }: AdminShellProps) {
+export function AdminShell({ children }: AdminShellProps) {
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -85,9 +84,6 @@ export function AdminShell({ children, email = "Lupe" }: AdminShellProps) {
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="hidden text-sm text-muted-foreground sm:inline">
-                {email}
-              </span>
               <Button asChild variant="outline" size="sm">
                 <a href="/admin/sign-out">Sign out</a>
               </Button>

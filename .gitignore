@@ -20,6 +20,7 @@ next-env.d.ts
 # Local admin/content development store
 data/admin-content.json
 .Codex/backups/
+supabase/.temp/
 
 # Editor directories and files
 .vscode/*
