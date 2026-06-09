@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Activity, CalendarClock, FileText, History, Newspaper } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildAdminDashboardSummary } from "@/lib/admin/dashboard-summary";
-import { listAdminPosts, listAuditEvents } from "@/lib/admin/content-store";
+import {
+  getAdminContentDatabaseIssue,
+  listAdminPosts,
+  listAuditEvents,
+} from "@/lib/admin/content-store";
 
 export const metadata: Metadata = {
   title: "Overview",
@@ -43,9 +48,10 @@ function prettyAction(action: string) {
 }
 
 export default async function AdminPage() {
-  const [posts, auditEvents] = await Promise.all([
+  const [posts, auditEvents, databaseIssue] = await Promise.all([
     listAdminPosts(),
     listAuditEvents(),
+    getAdminContentDatabaseIssue(),
   ]);
   const summary = buildAdminDashboardSummary({
     posts,
@@ -59,6 +65,13 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-8">
+      {databaseIssue && (
+        <Alert>
+          <AlertTitle>Content database setup needed</AlertTitle>
+          <AlertDescription>{databaseIssue}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-sm font-medium text-muted-foreground">

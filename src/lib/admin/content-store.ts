@@ -107,6 +107,27 @@ function hasDatabase() {
   return Boolean(process.env.DATABASE_URL);
 }
 
+function isDatabaseSetupError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+
+  const message = error.message.toLowerCase();
+  const code = "code" in error ? String(error.code) : "";
+
+  return (
+    code === "42P01" ||
+    code === "42704" ||
+    message.includes("database_url is required") ||
+    message.includes("does not exist")
+  );
+}
+
+function warnDatabaseFallback(error: unknown) {
+  console.warn(
+    "Admin content database is unavailable; using local fallback data.",
+    error,
+  );
+}
+
 function now() {
   return new Date().toISOString();
 }
@@ -340,11 +361,16 @@ async function ensureSeedTopics() {
 
 export async function listAdminPosts() {
   if (hasDatabase()) {
-    const rows = await getDb()
-      .select()
-      .from(blogPosts)
-      .orderBy(desc(blogPosts.updatedAt));
-    return rows.map(rowToPost);
+    try {
+      const rows = await getDb()
+        .select()
+        .from(blogPosts)
+        .orderBy(desc(blogPosts.updatedAt));
+      return rows.map(rowToPost);
+    } catch (error) {
+      if (!isDatabaseSetupError(error)) throw error;
+      warnDatabaseFallback(error);
+    }
   }
 
   const store = await readStore();
@@ -353,12 +379,17 @@ export async function listAdminPosts() {
 
 export async function getAdminPost(id: string) {
   if (hasDatabase()) {
-    const [row] = await getDb()
-      .select()
-      .from(blogPosts)
-      .where(eq(blogPosts.id, id))
-      .limit(1);
-    return row ? rowToPost(row) : null;
+    try {
+      const [row] = await getDb()
+        .select()
+        .from(blogPosts)
+        .where(eq(blogPosts.id, id))
+        .limit(1);
+      return row ? rowToPost(row) : null;
+    } catch (error) {
+      if (!isDatabaseSetupError(error)) throw error;
+      warnDatabaseFallback(error);
+    }
   }
 
   const store = await readStore();
@@ -368,12 +399,17 @@ export async function getAdminPost(id: string) {
 
 export async function listBlogTopics() {
   if (hasDatabase()) {
-    await ensureSeedTopics();
-    const rows = await getDb()
-      .select()
-      .from(blogTopics)
-      .orderBy(desc(blogTopics.active), asc(blogTopics.topic));
-    return rows.map(rowToTopic);
+    try {
+      await ensureSeedTopics();
+      const rows = await getDb()
+        .select()
+        .from(blogTopics)
+        .orderBy(desc(blogTopics.active), asc(blogTopics.topic));
+      return rows.map(rowToTopic);
+    } catch (error) {
+      if (!isDatabaseSetupError(error)) throw error;
+      warnDatabaseFallback(error);
+    }
   }
 
   const store = await readStore();
@@ -385,16 +421,36 @@ export async function listBlogTopics() {
 
 export async function listAuditEvents() {
   if (hasDatabase()) {
-    const rows = await getDb()
-      .select()
-      .from(adminAuditLog)
-      .orderBy(desc(adminAuditLog.createdAt))
-      .limit(100);
-    return rows.map(rowToAudit);
+    try {
+      const rows = await getDb()
+        .select()
+        .from(adminAuditLog)
+        .orderBy(desc(adminAuditLog.createdAt))
+        .limit(100);
+      return rows.map(rowToAudit);
+    } catch (error) {
+      if (!isDatabaseSetupError(error)) throw error;
+      warnDatabaseFallback(error);
+    }
   }
 
   const store = await readStore();
   return store.auditLog.slice(0, 100);
+}
+
+export async function getAdminContentDatabaseIssue() {
+  if (!hasDatabase()) {
+    return "DATABASE_URL is not configured. Admin content is using fallback demo data until the production database is connected.";
+  }
+
+  try {
+    await getDb().select({ id: blogPosts.id }).from(blogPosts).limit(1);
+    return null;
+  } catch (error) {
+    if (!isDatabaseSetupError(error)) throw error;
+    warnDatabaseFallback(error);
+    return "The content database is connected but missing the admin content tables. Run the Drizzle migrations before using content publishing.";
+  }
 }
 
 export async function getNextActiveTopic() {
