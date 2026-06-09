@@ -13,11 +13,19 @@ export async function requestPasswordSignInAction(formData: FormData) {
     redirect("/admin/sign-in?error=1");
   }
 
-  const supabase = createClient(cookies());
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  let error: { message?: string } | null = null;
+
+  try {
+    const supabase = createClient(cookies());
+    const result = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    error = result.error;
+  } catch (cause) {
+    console.error("Admin sign-in failed before Supabase returned a response.", cause);
+    redirect("/admin/sign-in?error=1");
+  }
 
   if (error) {
     redirect("/admin/sign-in?error=1");

@@ -21,11 +21,23 @@ export async function createAdminAccountAction(formData: FormData) {
     createAccountError("Use a password with at least 12 characters.");
   }
 
-  const supabase = createClient(cookies());
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
+  let data: { session: unknown } | null = null;
+  let error: { message: string } | null = null;
+
+  try {
+    const supabase = createClient(cookies());
+    const result = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    data = result.data;
+    error = result.error;
+  } catch (cause) {
+    console.error("Admin account creation failed before Supabase returned a response.", cause);
+    createAccountError(
+      "Admin authentication is not fully configured. Check the Supabase environment variables in Vercel.",
+    );
+  }
 
   if (error) {
     if (error.message.toLowerCase().includes("signups not allowed")) {
@@ -37,7 +49,7 @@ export async function createAdminAccountAction(formData: FormData) {
     createAccountError(error.message);
   }
 
-  if (!data.session) {
+  if (!data?.session) {
     redirect("/admin/sign-in?created=1");
   }
 
